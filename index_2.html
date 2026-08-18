@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OrangeGap — Bridging The Gaps</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --ink: #14161C; --surface: #1C1F29; --surface-raised: #242836;
+    --border: rgba(255,255,255,0.08); --orange: #FF5B1E; --orange-dim: #3A2115;
+    --amber: #FFB627; --text: #F5F3EE; --text-dim: #9A9DAB;
+    --success: #35C87D; --success-dim: #123322;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--text); font-family: 'Inter', sans-serif; }
+  h1, h2, h3, .brand { font-family: 'Space Grotesk', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  .view { display: none; max-width: 1100px; margin: 0 auto; padding: 28px 20px 70px; }
+  .view.active { display: block; }
+  button { cursor: pointer; font-family: 'Inter', sans-serif; }
+  input, select, textarea { font-family: 'Inter', sans-serif; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600;
+    padding: 3px 9px; border-radius: 20px; background: rgba(255,255,255,0.06); color: var(--text-dim);
+  }
+  .badge.success { background: var(--success-dim); color: var(--success); }
+  .badge.orange { background: var(--orange-dim); color: var(--orange); }
+  .nav-link {
+    background: transparent; color: var(--text-dim); border: none; border-radius: 20px;
+    padding: 6px 12px; font-size: 13px; font-weight: 600; white-space: nowrap;
+  }
+  .nav-link.active { background: var(--orange-dim); color: var(--orange); }
+  .eco-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; cursor: pointer; }
+  .eco-card b { display: block; margin-bottom: 6px; }
+  .eco-card p { color: var(--text-dim); font-size: 13px; margin: 0; }
+  .field {
+    width: 100%; margin: 8px 0; padding: 11px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px; color: var(--text);
+  }
+</style>
+</head>
+<body>
+
+<div style="border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--ink); z-index:20;">
+  <div style="max-width:1100px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:16px;">
+    <div class="brand" style="font-size:21px; font-weight:700; cursor:pointer;" onclick="showView('home')">
+      Orange<span style="color:var(--orange)">Gap</span>
+    </div>
+    <div style="flex:1;"></div>
+    <select id="campusSelect" style="background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:13px;">
+      <option>Wits (Braamfontein)</option>
+      <option>UCT (Rondebosch)</option>
+      <option>UP (Hatfield)</option>
+      <option>UJ (APK)</option>
+      <option>UKZN (Howard College)</option>
+      <option>Stellenbosch</option>
+    </select>
+    <span id="authStatus" style="font-size:13px; color:var(--text-dim);"></span>
+    <button id="authBtn" onclick="showView('auth')" style="background:transparent; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700;">Sign in</button>
+    <button onclick="showView('sell')" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700;">+ Sell</button>
+  </div>
+  <div style="display:flex; gap:6px; max-width:1100px; margin:0 auto; padding:0 20px 10px; overflow-x:auto;">
+    <button class="nav-link" data-view="home" onclick="showView('home')">Home</button>
+    <button class="nav-link" data-view="marketplace" onclick="showView('marketplace')">Marketplace</button>
+    <button class="nav-link" data-view="opportunities" onclick="showView('opportunities')">Opportunities</button>
+    <button class="nav-link" data-view="messages" onclick="showView('messages')">Messages</button>
+    <button class="nav-link" data-view="profile" onclick="showView('profile')">Profile</button>
+    <button class="nav-link" data-view="moderation" onclick="showView('moderation')">Moderation</button>
+  </div>
+</div>
+
+<div id="view-home" class="view active">
+  <p class="mono" style="color:var(--orange); font-size:13px; letter-spacing:1px;">WITS (BRAAMFONTEIN)</p>
+  <h1 style="font-size:44px; line-height:1.1; max-width:600px; margin:10px 0;">
+    The gap between what you need and who has it — <span style="color:var(--orange)">closed.</span>
+  </h1>
+  <p style="color:var(--text-dim); font-size:16px; max-width:520px; line-height:1.6;">
+    One platform for buying, selling, working and finding opportunities — built around your campus, verified by your fellow students.
+  </p>
+  <div style="display:flex; gap:12px; margin-top:22px;">
+    <button onclick="showView('marketplace')" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:13px 22px; font-weight:700;">Browse marketplace</button>
+    <button onclick="showView('sell')" style="background:transparent; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:13px 22px; font-weight:700;">Sell something</button>
+  </div>
+  <h2 style="font-size:20px; margin-top:50px;">The OrangeGap ecosystem</h2>
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-top:16px;">
+    <div class="eco-card" onclick="showView('marketplace')"><b>Marketplace</b><p>Buy and sell with students nearby</p></div>
+    <div class="eco-card" onclick="showView('opportunities')"><b>Services</b><p>Tutoring, design, repairs and more</p></div>
+    <div class="eco-card" onclick="showView('opportunities')"><b>Jobs</b><p>Part-time work around your timetable</p></div>
+    <div class="eco-card" onclick="showView('opportunities')"><b>Bursaries</b><p>Funding matched to your field</p></div>
+  </div>
+</div>
+
+<div id="view-marketplace" class="view">
+  <h1>Marketplace</h1>
+  <input id="searchBox" oninput="renderListings()" placeholder="Search listings" class="field" style="max-width:400px;">
+  <div id="listingsGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px;"></div>
+</div>
+
+<div id="view-listing" class="view">
+  <button onclick="showView('marketplace')" style="background:none; border:none; color:var(--text-dim);">&larr; Back</button>
+  <div id="listingDetailContent"></div>
+</div>
+
+<div id="view-sell" class="view">
+  <h1>Sell an item</h1>
+  <input id="sellTitle" placeholder="Title" class="field">
+  <select id="sellCategory" class="field">
+    <option>Electronics</option><option>Textbooks</option><option>Furniture</option><option>Lab gear</option><option>Other</option>
+  </select>
+  <input id="sellPrice" type="number" placeholder="Price (ZAR)" class="field">
+  <textarea id="sellDesc" placeholder="Description" class="field" style="min-height:90px;"></textarea>
+  <button onclick="submitListing()" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Submit for review</button>
+  <p id="sellError" style="color:#FF8A8A; font-size:13px;"></p>
+</div>
+
+<div id="view-opportunities" class="view">
+  <h1>Opportunities</h1>
+  <p style="color:var(--text-dim);">Jobs, internships and bursaries — Phase 2 of the roadmap.</p>
+</div>
+
+<div id="view-messages" class="view">
+  <h1>Messages</h1>
+  <div id="messagesThread" style="border:1px solid var(--border); border-radius:12px; padding:16px; color:var(--text-dim);">
+    Sign in to view your conversations.
+  </div>
+</div>
+
+<div id="view-profile" class="view">
+  <h1>Profile</h1>
+  <div id="profileInfo"><p style="color:var(--text-dim);">Sign in to view your profile.</p></div>
+  <h3>My listings</h3>
+  <div id="myListings" style="color:var(--text-dim);">Sign in to see your listings.</div>
+</div>
+
+<div id="view-auth" class="view">
+  <h1 id="authTitle">Create your account</h1>
+  <input id="authEmail" type="email" placeholder="Email address" class="field">
+  <select id="authUniversity" class="field">
+    <option value="">Select your university</option>
+    <option>Wits</option>
+    <option>UCT</option>
+    <option>UP</option>
+    <option>UJ</option>
+    <option>UKZN</option>
+    <option>Stellenbosch</option>
+    <option>Rhodes</option>
+    <option>NWU</option>
+  </select>
+  <select id="authCampus" class="field">
+    <option value="">Select your campus</option>
+    <option>Wits (Braamfontein)</option>
+    <option>UCT (Rondebosch)</option>
+    <option>UP (Hatfield)</option>
+    <option>UJ (APK)</option>
+    <option>UKZN (Howard College)</option>
+    <option>Stellenbosch</option>
+    <option>Rhodes</option>
+    <option>NWU (Potchefstroom)</option>
+  </select>
+  <input id="authPassword" type="password" placeholder="Password" oninput="checkPasswordStrength()" class="field">
+  <div style="height:5px; border-radius:3px; background:var(--border); margin-bottom:4px; overflow:hidden;">
+    <div id="pwStrengthFill" style="height:100%; width:0%; background:var(--orange); transition:width 0.2s;"></div>
+  </div>
+  <p id="pwStrengthLabel" style="color:var(--text-dim); font-size:12px; margin:0 0 12px;"></p>
+  <button onclick="submitAuth()" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Continue</button>
+  <p id="authError" style="color:#FF8A8A; font-size:13px;"></p>
+  <p style="color:var(--text-dim); font-size:12px; margin-top:10px; cursor:pointer;" onclick="toggleAuthMode()"><span id="authToggleText">Already have an account? Sign in</span></p>
+  <p style="color:var(--text-dim); font-size:12px; margin-top:16px;">
+    We never store your password in plain text. Supabase hashes it securely, and your account
+    stays inactive until you verify your student email.
+  </p>
+</div>
+
+<div id="view-moderation" class="view">
+  <h1>Moderation queue</h1>
+  <div id="modQueue" style="color:var(--text-dim);">No reports yet.</div>
+</div>
+
+<script>
+const supabaseClient = supabase.createClient(
+  'https://xuadydcxqtrjamajfntl.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1YWR5ZGN4cXRyamFtYWpmbnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NjQzNzcsImV4cCI6MjEwMjU0MDM3N30.Obg6UdcMIHuvg6vzP94ex5aAdrRJQqJu-Fqt5bXCu4Q'
+);
+
+let currentUser = null;
+let isSignUpMode = true;
+const CATEGORY_TYPICAL_PRICE = { "Electronics": 800, "Textbooks": 300, "Furniture": 700 };
+const COMMON_PASSWORDS = ["password", "12345678", "qwerty123", "password1", "student123"];
+
+async function checkSession() {
+  const { data } = await supabaseClient.auth.getSession();
+  if (data.session) {
+    currentUser = data.session.user;
+    document.getElementById('authStatus').textContent = currentUser.email;
+    document.getElementById('authBtn').textContent = 'Sign out';
+    document.getElementById('authBtn').onclick = signOut;
+  }
+}
+
+async function signOut() {
+  await supabaseClient.auth.signOut();
+  currentUser = null;
+  location.reload();
+}
+
+function toggleAuthMode() {
+  isSignUpMode = !isSignUpMode;
+  document.getElementById('authTitle').textContent = isSignUpMode ? 'Create your account' : 'Sign in';
+  document.getElementById('authToggleText').textContent = isSignUpMode ? 'Already have an account? Sign in' : "Don't have an account? Sign up";
+}
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.view === name));
+  if (name === 'marketplace') renderListings();
+  if (name === 'moderation') renderModQueue();
+  if (name === 'profile') renderProfile();
+}
+
+async function renderListings() {
+  const q = (document.getElementById('searchBox').value || '').toLowerCase();
+  const grid = document.getElementById('listingsGrid');
+  grid.innerHTML = 'Loading...';
+
+  const { data, error } = await supabaseClient
+    .from('listings')
+    .select('*')
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false });
+
+  if (error) { grid.innerHTML = 'Could not load listings.'; return; }
+
+  const filtered = (data || []).filter(l => l.title.toLowerCase().includes(q));
+  grid.innerHTML = '';
+  filtered.forEach(item => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; cursor:pointer;';
+    card.innerHTML = `
+      <h3 style="font-size:14px; margin:0 0 8px;">${item.title}</h3>
+      <p class="mono" style="color:var(--orange); font-size:16px; font-weight:700;">R${item.price}</p>
+      <p style="color:var(--text-dim); font-size:12px; margin-top:8px;">${item.campus}</p>
+    `;
+    card.onclick = () => openListing(item.id);
+    grid.appendChild(card);
+  });
+  if (filtered.length === 0) grid.innerHTML = '<p style="color:var(--text-dim);">No listings match yet.</p>';
+}
+
+async function openListing(id) {
+  const { data: item } = await supabaseClient.from('listings').select('*').eq('id', id).single();
+  if (!item) return;
+  document.getElementById('listingDetailContent').innerHTML = `
+    <h1>${item.title}</h1>
+    <p class="mono" style="color:var(--orange); font-size:24px; font-weight:700;">R${item.price}</p>
+    <p style="color:var(--text-dim);">${item.description}</p>
+    <p style="color:var(--text-dim); font-size:13px;">${item.campus}</p>
+    <button onclick="messageSeller('${item.seller_id}','${item.id}')" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:12px 20px; font-weight:700;">Message seller</button>
+    <button onclick="reportListing('${item.id}')" style="margin-left:10px; background:transparent; color:var(--text-dim); border:1px solid var(--border); border-radius:8px; padding:12px 16px;">⚠ Report</button>
+  `;
+  showView('listing');
+}
+
+async function messageSeller(sellerId, listingId) {
+  if (!currentUser) { showView('auth'); return; }
+  await supabaseClient.from('messages').insert({
+    listing_id: listingId, sender_id: currentUser.id, recipient_id: sellerId, body: 'Hi, is this still available?'
+  });
+  showView('messages');
+  renderMessages();
+}
+
+async function renderMessages() {
+  if (!currentUser) return;
+  const { data } = await supabaseClient
+    .from('messages')
+    .select('*')
+    .or(`sender_id.eq.${currentUser.id},recipient_id.eq.${currentUser.id}`)
+    .order('created_at');
+  const thread = document.getElementById('messagesThread');
+  thread.innerHTML = (data || []).map(m => `<p>${m.sender_id === currentUser.id ? 'You' : 'Them'}: ${m.body}</p>`).join('') || 'No conversations yet.';
+}
+
+async function reportListing(listingId) {
+  if (!currentUser) { showView('auth'); return; }
+  await supabaseClient.from('reports').insert({ listing_id: listingId, reporter_id: currentUser.id, reason: 'Reported by user' });
+  alert('Reported. Our team will review this within 24 hours.');
+}
+
+async function renderModQueue() {
+  const { data } = await supabaseClient.from('reports').select('*, listings(title)').order('created_at', { ascending: false });
+  const el = document.getElementById('modQueue');
+  el.innerHTML = (data || []).length
+    ? data.map(r => `<div style="border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:8px;"><b>${r.listings ? r.listings.title : r.listing_id}</b><br><span style="font-size:12px;">${r.reason} — ${new Date(r.created_at).toLocaleString()}</span></div>`).join('')
+    : 'No reports yet.';
+}
+
+function checkForScamSignals(desc, price, category) {
+  const flags = [];
+  const typical = CATEGORY_TYPICAL_PRICE[category];
+  if (typical && price < typical * 0.25) flags.push('Price far below typical value — flagged for review.');
+  if (/whatsapp|eft only|pay first|cash app|western union/i.test(desc)) flags.push('Mentions off-platform payment — needs review.');
+  return flags;
+}
+
+async function submitListing() {
+  if (!currentUser) { showView('auth'); return; }
+  const title = document.getElementById('sellTitle').value.trim();
+  const price = Number(document.getElementById('sellPrice').value);
+  const desc = document.getElementById('sellDesc').value.trim();
+  const category = document.getElementById('sellCategory').value;
+  const campus = document.getElementById('campusSelect').value;
+  const err = document.getElementById('sellError');
+
+  if (!title || !price || !desc) { err.textContent = 'Fill in title, price and description.'; return; }
+
+  const flags = checkForScamSignals(desc, price, category);
+  const status = flags.length ? 'held_for_review' : 'pending_review';
+
+  const { error } = await supabaseClient.from('listings').insert({
+    seller_id: currentUser.id, title, description: desc, price, category,
+    condition: 'Good', campus, status, flags
+  });
+
+  if (error) { err.textContent = 'Could not submit listing. Try again.'; return; }
+  err.textContent = '';
+  document.getElementById('sellTitle').value = '';
+  document.getElementById('sellPrice').value = '';
+  document.getElementById('sellDesc').value = '';
+  showView('marketplace');
+}
+
+async function renderProfile() {
+  if (!currentUser) {
+    document.getElementById('profileInfo').innerHTML = '<p style="color:var(--text-dim);">Sign in to view your profile.</p>';
+    return;
+  }
+  document.getElementById('profileInfo').innerHTML = `<p>${currentUser.email}</p><span class="badge success">✓ Email verified</span>`;
+  const { data } = await supabaseClient.from('listings').select('*').eq('seller_id', currentUser.id);
+  document.getElementById('myListings').innerHTML = (data || []).map(l =>
+    `<p>${l.title} — R${l.price} <span class="badge orange">${l.status}</span></p>`
+  ).join('') || 'You haven\'t listed anything yet.';
+}
+
+function checkPasswordStrength() {
+  const pw = document.getElementById('authPassword').value;
+  const fill = document.getElementById('pwStrengthFill');
+  const label = document.getElementById('pwStrengthLabel');
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (COMMON_PASSWORDS.includes(pw.toLowerCase())) score = 0;
+  const levels = [
+    { w: '10%', c: '#E24B4A', t: 'Too weak' }, { w: '30%', c: '#E24B4A', t: 'Weak' },
+    { w: '55%', c: '#FFB627', t: 'Okay' }, { w: '75%', c: '#FFB627', t: 'Good' }, { w: '100%', c: '#35C87D', t: 'Strong' },
+  ];
+  const l = levels[Math.min(score, 4)];
+  fill.style.width = pw ? l.w : '0%';
+  fill.style.background = l.c;
+  label.textContent = pw ? l.t : '';
+  return score;
+}
+
+async function submitAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const pw = document.getElementById('authPassword').value;
+  const err = document.getElementById('authError');
+
+  if (!email.includes('@')) { err.textContent = 'Enter a valid email address.'; return; }
+
+  if (isSignUpMode) {
+    const university = document.getElementById('authUniversity').value;
+    const campus = document.getElementById('authCampus').value;
+    if (!university) { err.textContent = 'Select your university.'; return; }
+    if (!campus) { err.textContent = 'Select your campus.'; return; }
+    if (checkPasswordStrength() < 2) { err.textContent = 'Choose a stronger password.'; return; }
+
+    const { data, error } = await supabaseClient.auth.signUp({ email, password: pw });
+    if (error) { err.textContent = error.message; return; }
+
+    // Save university/campus into the users table, linked to the new auth account
+    if (data.user) {
+      await supabaseClient.from('users').insert({
+        id: data.user.id,
+        email: email,
+        university: university,
+        campus: campus,
+        verified_student: false
+      });
+    }
+
+    err.textContent = '';
+    alert('Check your email to verify your account before signing in.');
+    showView('home');
+  } else {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pw });
+    if (error) { err.textContent = 'Incorrect email or password.'; return; }
+    currentUser = data.user;
+    document.getElementById('authStatus').textContent = currentUser.email;
+    document.getElementById('authBtn').textContent = 'Sign out';
+    document.getElementById('authBtn').onclick = signOut;
+    err.textContent = '';
+    showView('home');
+  }
+}
+
+checkSession();
+renderListings();
+</script>
+</body>
+</html>

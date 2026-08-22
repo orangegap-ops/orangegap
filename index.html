@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OrangeGap — Bridging The Gaps</title>
+<title>OrangeGap - Bridging The Gaps</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -80,10 +80,10 @@
 <div id="view-home" class="view active">
   <p class="mono" id="homeCampusLabel" style="color:var(--orange); font-size:13px; letter-spacing:1px;">WITS (BRAAMFONTEIN)</p>
   <h1 style="font-size:44px; line-height:1.1; max-width:600px; margin:10px 0;">
-    The gap between what you need and who has it — <span style="color:var(--orange)">closed.</span>
+    The gap between what you need and who has it - <span style="color:var(--orange)">closed.</span>
   </h1>
   <p style="color:var(--text-dim); font-size:16px; max-width:520px; line-height:1.6;">
-    One platform for buying, selling, working and finding opportunities — built around your campus, verified by your fellow students.
+    One platform for buying, selling, working and finding opportunities - built around your campus, verified by your fellow students.
   </p>
   <div style="display:flex; gap:12px; margin-top:22px;">
     <button onclick="showView('marketplace')" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:13px 22px; font-weight:700;">Browse marketplace</button>
@@ -135,7 +135,7 @@
 
 <div id="view-opportunities" class="view">
   <h1>Opportunities</h1>
-  <p style="color:var(--text-dim); margin-bottom:16px;">Jobs, internships, vacation work and bursaries — filtered by faculty.</p>
+  <p style="color:var(--text-dim); margin-bottom:16px;">Jobs, internships, vacation work and bursaries - filtered by faculty.</p>
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;">
     <select id="facultyFilter" onchange="renderOpportunities()" class="field" style="max-width:260px; margin:0;">
       <option value="">All faculties</option>
@@ -199,11 +199,11 @@
   <textarea id="promoDesc" placeholder="What are you promoting?" class="field" style="min-height:80px;"></textarea>
   <input id="promoContact" placeholder="Contact info (WhatsApp, email, etc.)" class="field">
   <select id="promoPlan" class="field">
-    <option value="150">1 week promotion — R150</option>
-    <option value="450">1 month promotion — R450</option>
+    <option value="150">1 week promotion - R150</option>
+    <option value="450">1 month promotion - R450</option>
   </select>
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; margin:16px 0; color:var(--text-dim); font-size:13px;">
-    💳 Secure payment via PayFast — pay by card, Instant EFT, or your bank app. You'll be redirected to PayFast's secure checkout and brought back here once paid.
+    💳 Secure payment via PayFast - pay by card, Instant EFT, or your bank app. You'll be redirected to PayFast's secure checkout and brought back here once paid.
   </div>
   <button onclick="submitPromotion()" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Continue to payment</button>
   <p id="promoError" style="color:#FF8A8A; font-size:13px;"></p>
@@ -426,15 +426,15 @@ async function renderModQueue() {
   const { data } = await supabaseClient.from('reports').select('*, listings(title)').order('created_at', { ascending: false });
   const el = document.getElementById('modQueue');
   el.innerHTML = (data || []).length
-    ? data.map(r => `<div style="border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:8px;"><b>${r.listings ? r.listings.title : r.listing_id}</b><br><span style="font-size:12px;">${r.reason} — ${new Date(r.created_at).toLocaleString()}</span></div>`).join('')
+    ? data.map(r => `<div style="border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:8px;"><b>${r.listings ? r.listings.title : r.listing_id}</b><br><span style="font-size:12px;">${r.reason} - ${new Date(r.created_at).toLocaleString()}</span></div>`).join('')
     : 'No reports yet.';
 }
 
 function checkForScamSignals(desc, price, category) {
   const flags = [];
   const typical = CATEGORY_TYPICAL_PRICE[category];
-  if (typical && price < typical * 0.25) flags.push('Price far below typical value — flagged for review.');
-  if (/whatsapp|eft only|pay first|cash app|western union/i.test(desc)) flags.push('Mentions off-platform payment — needs review.');
+  if (typical && price < typical * 0.25) flags.push('Price far below typical value - flagged for review.');
+  if (/whatsapp|eft only|pay first|cash app|western union/i.test(desc)) flags.push('Mentions off-platform payment - needs review.');
   return flags;
 }
 
@@ -527,7 +527,7 @@ async function renderProfile() {
   document.getElementById('profileInfo').innerHTML = `<p>${currentUser.email}</p><span class="badge success">✓ Email verified</span>`;
   const { data } = await supabaseClient.from('listings').select('*').eq('seller_id', currentUser.id);
   document.getElementById('myListings').innerHTML = (data || []).map(l =>
-    `<p>${l.title} — you'll receive R${l.seller_payout ?? l.price} <span class="badge orange">${l.status}</span></p>`
+    `<p>${l.title} - you'll receive R${l.seller_payout ?? l.price} <span class="badge orange">${l.status}</span></p>`
   ).join('') || 'You haven\'t listed anything yet.';
 }
 
@@ -552,7 +552,7 @@ async function renderDiscover() {
     `;
     grid.appendChild(card);
   });
-  if ((data || []).length === 0) grid.innerHTML = '<p style="color:var(--text-dim);">No promotions live yet — be the first!</p>';
+  if ((data || []).length === 0) grid.innerHTML = '<p style="color:var(--text-dim);">No promotions live yet - be the first!</p>';
 }
 
 const PAYFAST_MERCHANT_ID = 'YOUR_PAYFAST_MERCHANT_ID';
@@ -634,7 +634,7 @@ async function renderEvents() {
     `;
     grid.appendChild(card);
   });
-  if ((data || []).length === 0) grid.innerHTML = '<p style="color:var(--text-dim);">No events yet — add the first one!</p>';
+  if ((data || []).length === 0) grid.innerHTML = '<p style="color:var(--text-dim);">No events yet - add the first one!</p>';
 }
 
 async function submitEvent() {
@@ -685,7 +685,7 @@ async function renderOpportunities() {
       <p style="color:var(--text-dim); font-size:13px;">${o.description}</p>
       ${o.link ? `<p style="font-size:12px; margin-top:8px;"><a href="${o.link}" target="_blank" style="color:var(--orange);">Apply / learn more →</a></p>` : ''}
     </div>
-  `).join('') || '<p style="color:var(--text-dim);">No opportunities match yet — check back soon or post one.</p>';
+  `).join('') || '<p style="color:var(--text-dim);">No opportunities match yet - check back soon or post one.</p>';
 }
 
 async function submitOpportunity() {

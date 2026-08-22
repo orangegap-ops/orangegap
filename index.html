@@ -49,7 +49,7 @@
       Orange<span style="color:var(--orange)">Gap</span>
     </div>
     <div style="flex:1;"></div>
-    <select id="campusSelect" style="background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:13px;">
+    <select id="campusSelect" onchange="onCampusChange()" style="background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:13px;">
       <option>Wits (Braamfontein)</option>
       <option>UCT (Rondebosch)</option>
       <option>UP (Hatfield)</option>
@@ -68,6 +68,8 @@
   <div style="display:flex; gap:6px; max-width:1100px; margin:0 auto; padding:0 20px 10px; overflow-x:auto;">
     <button class="nav-link" data-view="home" onclick="showView('home')">Home</button>
     <button class="nav-link" data-view="marketplace" onclick="showView('marketplace')">Marketplace</button>
+    <button class="nav-link" data-view="discover" onclick="showView('discover')">Discover</button>
+    <button class="nav-link" data-view="events" onclick="showView('events')">Events</button>
     <button class="nav-link" data-view="opportunities" onclick="showView('opportunities')">Opportunities</button>
     <button class="nav-link" data-view="messages" onclick="showView('messages')">Messages</button>
     <button class="nav-link" data-view="profile" onclick="showView('profile')">Profile</button>
@@ -76,7 +78,7 @@
 </div>
 
 <div id="view-home" class="view active">
-  <p class="mono" style="color:var(--orange); font-size:13px; letter-spacing:1px;">WITS (BRAAMFONTEIN)</p>
+  <p class="mono" id="homeCampusLabel" style="color:var(--orange); font-size:13px; letter-spacing:1px;">WITS (BRAAMFONTEIN)</p>
   <h1 style="font-size:44px; line-height:1.1; max-width:600px; margin:10px 0;">
     The gap between what you need and who has it — <span style="color:var(--orange)">closed.</span>
   </h1>
@@ -98,7 +100,16 @@
 
 <div id="view-marketplace" class="view">
   <h1>Marketplace</h1>
-  <input id="searchBox" oninput="renderListings()" placeholder="Search listings" class="field" style="max-width:400px;">
+  <div style="display:flex; gap:10px; flex-wrap:wrap; margin:8px 0 16px;">
+    <input id="searchBox" oninput="renderListings()" placeholder="Search listings" class="field" style="max-width:300px; margin:0;">
+    <select id="categoryFilter" onchange="renderListings()" class="field" style="max-width:180px; margin:0;">
+      <option value="">All categories</option>
+      <option>Books</option>
+      <option>Appliances</option>
+      <option>Electronics</option>
+      <option>Essentials</option>
+    </select>
+  </div>
   <div id="listingsGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px;"></div>
 </div>
 
@@ -109,19 +120,110 @@
 
 <div id="view-sell" class="view">
   <h1>Sell an item</h1>
+  <label style="color:var(--text-dim); font-size:13px; font-weight:600; display:block; margin:8px 0 6px;">Photos</label>
+  <input id="sellPhotos" type="file" accept="image/*" multiple class="field">
+  <div id="sellPhotoPreview" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;"></div>
   <input id="sellTitle" placeholder="Title" class="field">
   <select id="sellCategory" class="field">
-    <option>Electronics</option><option>Textbooks</option><option>Furniture</option><option>Lab gear</option><option>Other</option>
+    <option>Books</option><option>Appliances</option><option>Electronics</option><option>Essentials</option>
   </select>
-  <input id="sellPrice" type="number" placeholder="Price (ZAR)" class="field">
+  <input id="sellPrice" type="number" placeholder="What you want to receive (ZAR)" class="field">
   <textarea id="sellDesc" placeholder="Description" class="field" style="min-height:90px;"></textarea>
-  <button onclick="submitListing()" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Submit for review</button>
+  <button id="sellSubmitBtn" onclick="submitListing()" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Submit for review</button>
   <p id="sellError" style="color:#FF8A8A; font-size:13px;"></p>
 </div>
 
 <div id="view-opportunities" class="view">
   <h1>Opportunities</h1>
-  <p style="color:var(--text-dim);">Jobs, internships and bursaries — Phase 2 of the roadmap.</p>
+  <p style="color:var(--text-dim); margin-bottom:16px;">Jobs, internships, vacation work and bursaries — filtered by faculty.</p>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;">
+    <select id="facultyFilter" onchange="renderOpportunities()" class="field" style="max-width:260px; margin:0;">
+      <option value="">All faculties</option>
+      <option>Economic and Management Sciences</option>
+      <option>Education</option>
+      <option>Engineering</option>
+      <option>Health Sciences</option>
+      <option>Humanities</option>
+      <option>Law</option>
+      <option>Natural and Agricultural Sciences</option>
+      <option>Theology</option>
+    </select>
+    <select id="typeFilter" onchange="renderOpportunities()" class="field" style="max-width:180px; margin:0;">
+      <option value="">All types</option>
+      <option>Job</option>
+      <option>Internship</option>
+      <option>Vacation work</option>
+      <option>Bursary</option>
+    </select>
+  </div>
+  <button onclick="showView('addOpportunity')" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:11px 18px; font-weight:700; margin-bottom:20px;">+ Post an opportunity</button>
+  <div id="opportunitiesGrid" style="display:flex; flex-direction:column; gap:10px;"></div>
+</div>
+
+<div id="view-addOpportunity" class="view">
+  <h1>Post an opportunity</h1>
+  <input id="oppTitle" placeholder="Title (e.g. Marketing Internship)" class="field">
+  <select id="oppType" class="field">
+    <option>Job</option>
+    <option>Internship</option>
+    <option>Vacation work</option>
+    <option>Bursary</option>
+  </select>
+  <select id="oppFaculty" class="field">
+    <option>Economic and Management Sciences</option>
+    <option>Education</option>
+    <option>Engineering</option>
+    <option>Health Sciences</option>
+    <option>Humanities</option>
+    <option>Law</option>
+    <option>Natural and Agricultural Sciences</option>
+    <option>Theology</option>
+  </select>
+  <textarea id="oppDesc" placeholder="Description" class="field" style="min-height:80px;"></textarea>
+  <input id="oppLink" placeholder="Application link or contact (optional)" class="field">
+  <button onclick="submitOpportunity()" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Submit for review</button>
+  <p id="oppError" style="color:#FF8A8A; font-size:13px;"></p>
+</div>
+
+<div id="view-discover" class="view">
+  <h1>Discover</h1>
+  <p style="color:var(--text-dim); margin-bottom:18px;">Local sellers and businesses promoting to your campus.</p>
+  <button onclick="showView('promote')" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:11px 18px; font-weight:700; margin-bottom:20px;">📣 Advertise your business</button>
+  <div id="discoverGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px;"></div>
+</div>
+
+<div id="view-promote" class="view">
+  <h1>Advertise on OrangeGap</h1>
+  <p style="color:var(--text-dim); margin-bottom:20px;">Reach students at your campus. Promotions are reviewed before going live.</p>
+  <input id="promoBusiness" placeholder="Business or service name" class="field">
+  <textarea id="promoDesc" placeholder="What are you promoting?" class="field" style="min-height:80px;"></textarea>
+  <input id="promoContact" placeholder="Contact info (WhatsApp, email, etc.)" class="field">
+  <select id="promoPlan" class="field">
+    <option value="150">1 week promotion — R150</option>
+    <option value="450">1 month promotion — R450</option>
+  </select>
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; margin:16px 0; color:var(--text-dim); font-size:13px;">
+    💳 Secure payment via PayFast — pay by card, Instant EFT, or your bank app. You'll be redirected to PayFast's secure checkout and brought back here once paid.
+  </div>
+  <button onclick="submitPromotion()" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Continue to payment</button>
+  <p id="promoError" style="color:#FF8A8A; font-size:13px;"></p>
+</div>
+
+<div id="view-events" class="view">
+  <h1>Events</h1>
+  <p style="color:var(--text-dim); margin-bottom:18px;">What's happening at your campus.</p>
+  <button onclick="showView('addEvent')" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:11px 18px; font-weight:700; margin-bottom:20px;">+ Add an event</button>
+  <div id="eventsGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px;"></div>
+</div>
+
+<div id="view-addEvent" class="view">
+  <h1>Add an event</h1>
+  <input id="eventTitle" placeholder="Event title" class="field">
+  <input id="eventDate" type="datetime-local" class="field">
+  <input id="eventLocation" placeholder="Location" class="field">
+  <textarea id="eventDesc" placeholder="Description" class="field" style="min-height:80px;"></textarea>
+  <button onclick="submitEvent()" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Submit for review</button>
+  <p id="eventError" style="color:#FF8A8A; font-size:13px;"></p>
 </div>
 
 <div id="view-messages" class="view">
@@ -140,7 +242,8 @@
 
 <div id="view-auth" class="view">
   <h1 id="authTitle">Create your account</h1>
-  <input id="authEmail" type="email" placeholder="Email address" class="field">
+  <form id="authForm" autocomplete="on" onsubmit="event.preventDefault(); submitAuth();">
+  <input id="authEmail" name="email" type="email" placeholder="Email address" class="field" autocomplete="username">
   <select id="authUniversity" class="field">
     <option value="">Select your university</option>
     <option>Wits</option>
@@ -165,18 +268,19 @@
     <option>NWU (Mahikeng)</option>
     <option>NWU (Vanderbijlpark)</option>
   </select>
-  <input id="authPassword" type="password" placeholder="Password" oninput="checkPasswordStrength()" class="field">
+  <input id="authPassword" name="password" type="password" placeholder="Password" oninput="checkPasswordStrength()" class="field" autocomplete="new-password">
   <div style="height:5px; border-radius:3px; background:var(--border); margin-bottom:4px; overflow:hidden;">
     <div id="pwStrengthFill" style="height:100%; width:0%; background:var(--orange); transition:width 0.2s;"></div>
   </div>
   <p id="pwStrengthLabel" style="color:var(--text-dim); font-size:12px; margin:0 0 12px;"></p>
-  <button onclick="submitAuth()" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Continue</button>
+  <button type="submit" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Continue</button>
   <p id="authError" style="color:#FF8A8A; font-size:13px;"></p>
   <p style="color:var(--text-dim); font-size:12px; margin-top:10px; cursor:pointer;" onclick="toggleAuthMode()"><span id="authToggleText">Already have an account? Sign in</span></p>
   <p style="color:var(--text-dim); font-size:12px; margin-top:16px;">
     We never store your password in plain text. Supabase hashes it securely, and your account
     stays inactive until you verify your student email.
   </p>
+  </form>
 </div>
 
 <div id="view-moderation" class="view">
@@ -192,7 +296,8 @@ const supabaseClient = supabase.createClient(
 
 let currentUser = null;
 let isSignUpMode = true;
-const CATEGORY_TYPICAL_PRICE = { "Electronics": 800, "Textbooks": 300, "Furniture": 700 };
+const CATEGORY_TYPICAL_PRICE = { "Books": 250, "Appliances": 700, "Electronics": 800, "Essentials": 150 };
+const PLATFORM_MARKUP = 0.20; // 20% added to every listing's displayed price
 const COMMON_PASSWORDS = ["password", "12345678", "qwerty123", "password1", "student123"];
 
 async function checkSession() {
@@ -215,6 +320,9 @@ function toggleAuthMode() {
   isSignUpMode = !isSignUpMode;
   document.getElementById('authTitle').textContent = isSignUpMode ? 'Create your account' : 'Sign in';
   document.getElementById('authToggleText').textContent = isSignUpMode ? 'Already have an account? Sign in' : "Don't have an account? Sign up";
+  document.getElementById('authPassword').setAttribute('autocomplete', isSignUpMode ? 'new-password' : 'current-password');
+  document.getElementById('authUniversity').style.display = isSignUpMode ? 'block' : 'none';
+  document.getElementById('authCampus').style.display = isSignUpMode ? 'block' : 'none';
 }
 
 function showView(name) {
@@ -224,30 +332,44 @@ function showView(name) {
   if (name === 'marketplace') renderListings();
   if (name === 'moderation') renderModQueue();
   if (name === 'profile') renderProfile();
+  if (name === 'discover') renderDiscover();
+  if (name === 'events') renderEvents();
+  if (name === 'opportunities') renderOpportunities();
 }
 
 async function renderListings() {
   const q = (document.getElementById('searchBox').value || '').toLowerCase();
+  const cat = document.getElementById('categoryFilter').value;
   const grid = document.getElementById('listingsGrid');
   grid.innerHTML = 'Loading...';
 
   const { data, error } = await supabaseClient
     .from('listings')
-    .select('*')
+    .select('*, listing_photos(storage_url)')
     .eq('status', 'approved')
     .order('created_at', { ascending: false });
 
   if (error) { grid.innerHTML = 'Could not load listings.'; return; }
 
-  const filtered = (data || []).filter(l => l.title.toLowerCase().includes(q));
+  const filtered = (data || []).filter(l =>
+    l.title.toLowerCase().includes(q) && (!cat || l.category === cat)
+  );
   grid.innerHTML = '';
   filtered.forEach(item => {
     const card = document.createElement('div');
-    card.style.cssText = 'background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; cursor:pointer;';
+    card.style.cssText = 'background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; cursor:pointer;';
+    const photoUrl = item.listing_photos && item.listing_photos.length > 0 ? item.listing_photos[0].storage_url : null;
+    const thumb = photoUrl
+      ? `<img src="${photoUrl}" style="width:100%; height:130px; object-fit:cover; display:block;">`
+      : `<div style="height:130px; background:linear-gradient(135deg, var(--surface-raised), var(--orange-dim)); display:flex; align-items:center; justify-content:center; color:var(--orange); font-size:24px;">📦</div>`;
     card.innerHTML = `
-      <h3 style="font-size:14px; margin:0 0 8px;">${item.title}</h3>
-      <p class="mono" style="color:var(--orange); font-size:16px; font-weight:700;">R${item.price}</p>
-      <p style="color:var(--text-dim); font-size:12px; margin-top:8px;">${item.campus}</p>
+      ${thumb}
+      <div style="padding:14px;">
+        <span class="badge" style="margin-bottom:6px;">${item.category}</span>
+        <h3 style="font-size:14px; margin:6px 0 8px;">${item.title}</h3>
+        <p class="mono" style="color:var(--orange); font-size:16px; font-weight:700;">R${item.price}</p>
+        <p style="color:var(--text-dim); font-size:12px; margin-top:8px;">${item.campus}</p>
+      </div>
     `;
     card.onclick = () => openListing(item.id);
     grid.appendChild(card);
@@ -256,9 +378,14 @@ async function renderListings() {
 }
 
 async function openListing(id) {
-  const { data: item } = await supabaseClient.from('listings').select('*').eq('id', id).single();
+  const { data: item } = await supabaseClient.from('listings').select('*, listing_photos(storage_url)').eq('id', id).single();
   if (!item) return;
+  const photos = item.listing_photos || [];
+  const photoStrip = photos.length > 0
+    ? `<div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:16px;">${photos.map(p => `<img src="${p.storage_url}" style="width:160px; height:160px; object-fit:cover; border-radius:10px; flex-shrink:0;">`).join('')}</div>`
+    : `<div style="height:180px; background:linear-gradient(135deg, var(--surface-raised), var(--orange-dim)); border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--orange); font-size:32px; margin-bottom:16px;">📦</div>`;
   document.getElementById('listingDetailContent').innerHTML = `
+    ${photoStrip}
     <h1>${item.title}</h1>
     <p class="mono" style="color:var(--orange); font-size:24px; font-weight:700;">R${item.price}</p>
     <p style="color:var(--text-dim);">${item.description}</p>
@@ -311,30 +438,84 @@ function checkForScamSignals(desc, price, category) {
   return flags;
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  const photoInput = document.getElementById('sellPhotos');
+  if (photoInput) {
+    photoInput.addEventListener('change', () => {
+      const preview = document.getElementById('sellPhotoPreview');
+      preview.innerHTML = '';
+      Array.from(photoInput.files).slice(0, 5).forEach(file => {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.style.cssText = 'width:70px; height:70px; object-fit:cover; border-radius:8px; border:1px solid var(--border);';
+        preview.appendChild(img);
+      });
+    });
+  }
+});
+
+async function uploadListingPhotos(listingId, files) {
+  const urls = [];
+  for (const file of Array.from(files).slice(0, 5)) {
+    const ext = file.name.split('.').pop();
+    const path = `${currentUser.id}/${listingId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error: uploadError } = await supabaseClient.storage.from('listing-photos').upload(path, file);
+    if (uploadError) continue;
+    const { data: urlData } = supabaseClient.storage.from('listing-photos').getPublicUrl(path);
+    urls.push(urlData.publicUrl);
+  }
+  if (urls.length > 0) {
+    await supabaseClient.from('listing_photos').insert(
+      urls.map(storage_url => ({ listing_id: listingId, storage_url }))
+    );
+  }
+  return urls;
+}
+
 async function submitListing() {
   if (!currentUser) { showView('auth'); return; }
   const title = document.getElementById('sellTitle').value.trim();
-  const price = Number(document.getElementById('sellPrice').value);
+  const sellerPrice = Number(document.getElementById('sellPrice').value);
   const desc = document.getElementById('sellDesc').value.trim();
   const category = document.getElementById('sellCategory').value;
   const campus = document.getElementById('campusSelect').value;
+  const photoFiles = document.getElementById('sellPhotos').files;
   const err = document.getElementById('sellError');
+  const submitBtn = document.getElementById('sellSubmitBtn');
 
-  if (!title || !price || !desc) { err.textContent = 'Fill in title, price and description.'; return; }
+  if (!title || !sellerPrice || !desc) { err.textContent = 'Fill in title, price and description.'; return; }
 
-  const flags = checkForScamSignals(desc, price, category);
+  submitBtn.textContent = 'Submitting...';
+  submitBtn.disabled = true;
+
+  const flags = checkForScamSignals(desc, sellerPrice, category);
   const status = flags.length ? 'held_for_review' : 'pending_review';
+  const displayPrice = Math.round(sellerPrice * (1 + PLATFORM_MARKUP) * 100) / 100;
 
-  const { error } = await supabaseClient.from('listings').insert({
-    seller_id: currentUser.id, title, description: desc, price, category,
+  const { data: inserted, error } = await supabaseClient.from('listings').insert({
+    seller_id: currentUser.id, title, description: desc, price: displayPrice, seller_payout: sellerPrice, category,
     condition: 'Good', campus, status, flags
-  });
+  }).select().single();
 
-  if (error) { err.textContent = 'Could not submit listing. Try again.'; return; }
+  if (error) {
+    err.textContent = 'Could not submit listing. Try again.';
+    submitBtn.textContent = 'Submit for review';
+    submitBtn.disabled = false;
+    return;
+  }
+
+  if (photoFiles && photoFiles.length > 0) {
+    await uploadListingPhotos(inserted.id, photoFiles);
+  }
+
   err.textContent = '';
+  submitBtn.textContent = 'Submit for review';
+  submitBtn.disabled = false;
   document.getElementById('sellTitle').value = '';
   document.getElementById('sellPrice').value = '';
   document.getElementById('sellDesc').value = '';
+  document.getElementById('sellPhotos').value = '';
+  document.getElementById('sellPhotoPreview').innerHTML = '';
   showView('marketplace');
 }
 
@@ -346,8 +527,189 @@ async function renderProfile() {
   document.getElementById('profileInfo').innerHTML = `<p>${currentUser.email}</p><span class="badge success">✓ Email verified</span>`;
   const { data } = await supabaseClient.from('listings').select('*').eq('seller_id', currentUser.id);
   document.getElementById('myListings').innerHTML = (data || []).map(l =>
-    `<p>${l.title} — R${l.price} <span class="badge orange">${l.status}</span></p>`
+    `<p>${l.title} — you'll receive R${l.seller_payout ?? l.price} <span class="badge orange">${l.status}</span></p>`
   ).join('') || 'You haven\'t listed anything yet.';
+}
+
+async function renderDiscover() {
+  const grid = document.getElementById('discoverGrid');
+  grid.innerHTML = 'Loading...';
+  const { data, error } = await supabaseClient
+    .from('promotions')
+    .select('*')
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false });
+  if (error) { grid.innerHTML = 'Could not load promotions.'; return; }
+  grid.innerHTML = '';
+  (data || []).forEach(p => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--surface); border:1px solid var(--orange); border-radius:14px; padding:16px;';
+    card.innerHTML = `
+      <span class="badge orange" style="margin-bottom:8px;">📣 Promoted</span>
+      <h3 style="font-size:15px; margin:8px 0 4px;">${p.business_name}</h3>
+      <p style="color:var(--text-dim); font-size:13px;">${p.description}</p>
+      <p style="color:var(--text-dim); font-size:12px; margin-top:8px;">${p.campus}${p.contact_info ? ' · ' + p.contact_info : ''}</p>
+    `;
+    grid.appendChild(card);
+  });
+  if ((data || []).length === 0) grid.innerHTML = '<p style="color:var(--text-dim);">No promotions live yet — be the first!</p>';
+}
+
+const PAYFAST_MERCHANT_ID = 'YOUR_PAYFAST_MERCHANT_ID';
+const PAYFAST_MERCHANT_KEY = 'YOUR_PAYFAST_MERCHANT_KEY';
+const PAYFAST_SANDBOX = true; // switch to false only once you're using real live PayFast credentials
+const PAYFAST_URL = PAYFAST_SANDBOX ? 'https://sandbox.payfast.co.za/eng/process' : 'https://www.payfast.co.za/eng/process';
+const SITE_URL = 'https://orangegap.vercel.app';
+
+async function submitPromotion() {
+  if (!currentUser) { showView('auth'); return; }
+  const business_name = document.getElementById('promoBusiness').value.trim();
+  const description = document.getElementById('promoDesc').value.trim();
+  const contact_info = document.getElementById('promoContact').value.trim();
+  const amount = document.getElementById('promoPlan').value;
+  const campus = document.getElementById('campusSelect').value;
+  const err = document.getElementById('promoError');
+
+  if (!business_name || !description) { err.textContent = 'Fill in a business name and description.'; return; }
+
+  const { data, error } = await supabaseClient.from('promotions').insert({
+    seller_id: currentUser.id, business_name, description, contact_info, campus,
+    payment_status: 'unpaid', status: 'pending_payment'
+  }).select().single();
+
+  if (error) { err.textContent = 'Could not submit. Try again.'; return; }
+  err.textContent = '';
+  redirectToPayFast(data.id, amount, business_name);
+}
+
+function redirectToPayFast(promotionId, amount, itemName) {
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = PAYFAST_URL;
+
+  const fields = {
+    merchant_id: PAYFAST_MERCHANT_ID,
+    merchant_key: PAYFAST_MERCHANT_KEY,
+    return_url: SITE_URL + '?promo_paid=' + promotionId,
+    cancel_url: SITE_URL + '?promo_cancelled=' + promotionId,
+    notify_url: 'YOUR_SUPABASE_EDGE_FUNCTION_URL_HERE', // set once the ITN Edge Function is deployed
+    name_first: currentUser.email.split('@')[0],
+    email_address: currentUser.email,
+    m_payment_id: promotionId,
+    amount: Number(amount).toFixed(2),
+    item_name: 'OrangeGap promotion: ' + itemName,
+  };
+
+  Object.entries(fields).forEach(([key, value]) => {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = key;
+    input.value = value;
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+}
+
+async function renderEvents() {
+  const grid = document.getElementById('eventsGrid');
+  grid.innerHTML = 'Loading...';
+  const { data, error } = await supabaseClient
+    .from('events')
+    .select('*')
+    .eq('status', 'approved')
+    .order('event_date', { ascending: true });
+  if (error) { grid.innerHTML = 'Could not load events.'; return; }
+  grid.innerHTML = '';
+  (data || []).forEach(ev => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px;';
+    const dateStr = new Date(ev.event_date).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' });
+    card.innerHTML = `
+      <p class="mono" style="color:var(--orange); font-size:12px;">${dateStr}</p>
+      <h3 style="font-size:15px; margin:6px 0 4px;">${ev.title}</h3>
+      <p style="color:var(--text-dim); font-size:13px;">${ev.description}</p>
+      <p style="color:var(--text-dim); font-size:12px; margin-top:8px;">📍 ${ev.location || ev.campus}</p>
+    `;
+    grid.appendChild(card);
+  });
+  if ((data || []).length === 0) grid.innerHTML = '<p style="color:var(--text-dim);">No events yet — add the first one!</p>';
+}
+
+async function submitEvent() {
+  if (!currentUser) { showView('auth'); return; }
+  const title = document.getElementById('eventTitle').value.trim();
+  const event_date = document.getElementById('eventDate').value;
+  const location = document.getElementById('eventLocation').value.trim();
+  const description = document.getElementById('eventDesc').value.trim();
+  const campus = document.getElementById('campusSelect').value;
+  const err = document.getElementById('eventError');
+
+  if (!title || !event_date || !description) { err.textContent = 'Fill in title, date and description.'; return; }
+
+  const { error } = await supabaseClient.from('events').insert({
+    organizer_id: currentUser.id, title, description, location, campus,
+    event_date: new Date(event_date).toISOString(), status: 'pending_review'
+  });
+
+  if (error) { err.textContent = 'Could not submit. Try again.'; return; }
+  err.textContent = '';
+  document.getElementById('eventTitle').value = '';
+  document.getElementById('eventDate').value = '';
+  document.getElementById('eventLocation').value = '';
+  document.getElementById('eventDesc').value = '';
+  showView('events');
+}
+
+async function renderOpportunities() {
+  const faculty = document.getElementById('facultyFilter').value;
+  const type = document.getElementById('typeFilter').value;
+  const grid = document.getElementById('opportunitiesGrid');
+  grid.innerHTML = 'Loading...';
+
+  let query = supabaseClient.from('opportunities').select('*').eq('status', 'approved').order('created_at', { ascending: false });
+  if (faculty) query = query.eq('faculty', faculty);
+  if (type) query = query.eq('type', type);
+
+  const { data, error } = await query;
+  if (error) { grid.innerHTML = 'Could not load opportunities.'; return; }
+
+  grid.innerHTML = (data || []).map(o => `
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+        <span class="badge orange">${o.type}</span>
+        <span class="badge">${o.faculty}</span>
+      </div>
+      <h3 style="font-size:15px; margin:0 0 4px;">${o.title}</h3>
+      <p style="color:var(--text-dim); font-size:13px;">${o.description}</p>
+      ${o.link ? `<p style="font-size:12px; margin-top:8px;"><a href="${o.link}" target="_blank" style="color:var(--orange);">Apply / learn more →</a></p>` : ''}
+    </div>
+  `).join('') || '<p style="color:var(--text-dim);">No opportunities match yet — check back soon or post one.</p>';
+}
+
+async function submitOpportunity() {
+  if (!currentUser) { showView('auth'); return; }
+  const title = document.getElementById('oppTitle').value.trim();
+  const type = document.getElementById('oppType').value;
+  const faculty = document.getElementById('oppFaculty').value;
+  const description = document.getElementById('oppDesc').value.trim();
+  const link = document.getElementById('oppLink').value.trim();
+  const campus = document.getElementById('campusSelect').value;
+  const err = document.getElementById('oppError');
+
+  if (!title || !description) { err.textContent = 'Fill in a title and description.'; return; }
+
+  const { error } = await supabaseClient.from('opportunities').insert({
+    poster_id: currentUser.id, title, type, faculty, description, link, campus, status: 'pending_review'
+  });
+
+  if (error) { err.textContent = 'Could not submit. Try again.'; return; }
+  err.textContent = '';
+  document.getElementById('oppTitle').value = '';
+  document.getElementById('oppDesc').value = '';
+  document.getElementById('oppLink').value = '';
+  showView('opportunities');
 }
 
 function checkPasswordStrength() {
@@ -410,8 +772,24 @@ async function submitAuth() {
   }
 }
 
+function checkPayFastReturn() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('promo_paid')) {
+    alert('Payment received! Your promotion is now pending final review before it goes live.');
+  } else if (params.get('promo_cancelled')) {
+    alert('Payment was cancelled. Your promotion request was saved but won\'t go live until paid.');
+  }
+}
+
+function onCampusChange() {
+  const campus = document.getElementById('campusSelect').value;
+  document.getElementById('homeCampusLabel').textContent = campus.toUpperCase();
+}
+
+checkPayFastReturn();
 checkSession();
 renderListings();
+onCampusChange();
 </script>
 </body>
 </html>

@@ -38,15 +38,21 @@
   .field {
     width: 100%; margin: 8px 0; padding: 11px; background: var(--surface);
     border: 1px solid var(--border); border-radius: 8px; color: var(--text);
+  }  @media (min-width: 820px) {
+    .ads-sidebar { display: block !important; }
   }
 </style>
 </head>
 <body>
 
 <div style="border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--ink); z-index:20;">
-  <div style="max-width:1100px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:16px;">
+  <div style="max-width:1100px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
     <div class="brand" style="font-size:21px; font-weight:700; cursor:pointer;" onclick="showView('home')">
       Orange<span style="color:var(--orange)">Gap</span>
+    </div>
+    <div style="flex:1; max-width:340px; display:flex; gap:6px;">
+      <input id="navSearchBox" placeholder="Search the marketplace..." style="width:100%; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:13px;" onkeydown="if(event.key==='Enter') runNavSearch();">
+      <button onclick="runNavSearch()" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:0 12px; font-size:13px; font-weight:700;">Search</button>
     </div>
     <div style="flex:1;"></div>
     <select id="campusSelect" onchange="onCampusChange()" style="background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:13px;">
@@ -85,11 +91,21 @@
   <p style="color:var(--text-dim); font-size:16px; max-width:520px; line-height:1.6;">
     One platform for buying, selling, working and finding opportunities - built around your campus, verified by your fellow students.
   </p>
-  <div style="display:flex; gap:12px; margin-top:22px;">
+
+  <div style="display:flex; gap:12px; margin:22px 0 10px;">
     <button onclick="showView('marketplace')" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:13px 22px; font-weight:700;">Browse marketplace</button>
     <button onclick="showView('sell')" style="background:transparent; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:13px 22px; font-weight:700;">Sell something</button>
   </div>
-  <h2 style="font-size:20px; margin-top:50px;">The OrangeGap ecosystem</h2>
+
+  <div style="margin-top:40px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="font-size:18px; margin:0;">📣 Sponsored</h2>
+      <span onclick="showView('discover')" style="color:var(--text-dim); font-size:12px; cursor:pointer;">See all →</span>
+    </div>
+    <div id="homeAdsStrip" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-top:12px;"></div>
+  </div>
+
+  <h2 style="font-size:20px; margin-top:40px;">The OrangeGap ecosystem</h2>
   <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-top:16px;">
     <div class="eco-card" onclick="showView('marketplace')"><b>Marketplace</b><p>Buy and sell with students nearby</p></div>
     <div class="eco-card" onclick="showView('opportunities')"><b>Services</b><p>Tutoring, design, repairs and more</p></div>
@@ -100,17 +116,28 @@
 
 <div id="view-marketplace" class="view">
   <h1>Marketplace</h1>
-  <div style="display:flex; gap:10px; flex-wrap:wrap; margin:8px 0 16px;">
-    <input id="searchBox" oninput="renderListings()" placeholder="Search listings" class="field" style="max-width:300px; margin:0;">
-    <select id="categoryFilter" onchange="renderListings()" class="field" style="max-width:180px; margin:0;">
-      <option value="">All categories</option>
-      <option>Books</option>
-      <option>Appliances</option>
-      <option>Electronics</option>
-      <option>Essentials</option>
-    </select>
+  <div style="display:flex; gap:24px; align-items:flex-start;">
+    <div style="flex:1; min-width:0;">
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin:8px 0 16px;">
+        <input id="searchBox" oninput="renderListings()" placeholder="Search listings" class="field" style="max-width:300px; margin:0;">
+        <select id="categoryFilter" onchange="renderListings()" class="field" style="max-width:180px; margin:0;">
+          <option value="">All categories</option>
+          <option>Books</option>
+          <option>Appliances</option>
+          <option>Electronics</option>
+          <option>Essentials</option>
+        </select>
+      </div>
+      <div id="listingsGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:16px;"></div>
+    </div>
+    <div style="width:280px; flex-shrink:0; display:none;" id="marketplaceAdsSidebarWrap" class="ads-sidebar">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h2 style="font-size:14px; margin:0; color:var(--text-dim);">📣 Sponsored</h2>
+        <span onclick="showView('discover')" style="color:var(--text-dim); font-size:11px; cursor:pointer;">See all →</span>
+      </div>
+      <div id="marketplaceAdsSidebar" style="display:flex; flex-direction:column; gap:12px;"></div>
+    </div>
   </div>
-  <div id="listingsGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:16px;"></div>
 </div>
 
 <div id="view-listing" class="view">
@@ -355,7 +382,7 @@ function showView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.view === name));
-  if (name === 'marketplace') renderListings();
+  if (name === 'marketplace') { renderListings(); renderHomeAdsSlice(); }
   if (name === 'moderation') renderModQueue();
   if (name === 'profile') renderProfile();
   if (name === 'discover') renderDiscover();
@@ -939,6 +966,69 @@ function checkPayFastReturn() {
   }
 }
 
+function runNavSearch() {
+  const q = document.getElementById('navSearchBox').value;
+  showView('marketplace');
+  document.getElementById('searchBox').value = q;
+  renderListings();
+}
+
+let allHomeAds = [];
+let homeAdsRotationIndex = 0;
+let homeAdsInterval = null;
+
+async function loadHomeAds() {
+  const { data } = await supabaseClient
+    .from('promotions')
+    .select('*')
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false });
+  allHomeAds = data || [];
+  homeAdsRotationIndex = 0;
+  renderHomeAdsSlice();
+
+  if (homeAdsInterval) clearInterval(homeAdsInterval);
+  if (allHomeAds.length > 3) {
+    homeAdsInterval = setInterval(() => {
+      homeAdsRotationIndex = (homeAdsRotationIndex + 3) % allHomeAds.length;
+      renderHomeAdsSlice();
+    }, 6000);
+  }
+}
+
+function renderHomeAdsSlice() {
+  renderAdsInto('homeAdsStrip', false);
+  renderAdsInto('marketplaceAdsSidebar', true);
+}
+
+function renderAdsInto(elementId, stacked) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+
+  if (allHomeAds.length === 0) {
+    const placeholderCard = (i) => `
+      <div style="background:var(--surface); border:1px dashed var(--border); border-radius:12px; padding:22px 14px; text-align:center; min-height:150px; display:flex; flex-direction:column; justify-content:center;">
+        <span class="badge" style="margin-bottom:6px; align-self:center;">Ad space ${i}</span>
+        <p style="color:var(--text-dim); font-size:12px; margin:8px 0 0;">Your business could be here.</p>
+        <span onclick="showView('promote')" style="color:var(--orange); font-size:12px; cursor:pointer; display:inline-block; margin-top:8px;">Advertise here →</span>
+      </div>`;
+    el.innerHTML = [1, 2, 3].map(placeholderCard).join('');
+    return;
+  }
+
+  const slice = [];
+  for (let i = 0; i < 3; i++) {
+    slice.push(allHomeAds[(homeAdsRotationIndex + i) % allHomeAds.length]);
+  }
+  el.innerHTML = slice.map(p => `
+    <div style="background:var(--surface); border:1px solid var(--orange); border-radius:12px; padding:20px 16px; min-height:150px; display:flex; flex-direction:column; justify-content:center;">
+      <span class="badge orange" style="margin-bottom:6px;">📣 Ad</span>
+      <h3 style="font-size:15px; margin:6px 0 6px;">${p.business_name}</h3>
+      <p style="color:var(--text-dim); font-size:13px; line-height:1.5;">${p.description}</p>
+    </div>
+  `).join('');
+}
+
 function onCampusChange() {
   const campus = document.getElementById('campusSelect').value;
   document.getElementById('homeCampusLabel').textContent = campus.toUpperCase();
@@ -948,6 +1038,7 @@ checkPayFastReturn();
 checkSession();
 renderListings();
 onCampusChange();
+loadHomeAds();
 </script>
 </body>
 </html>

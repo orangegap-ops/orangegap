@@ -38,7 +38,47 @@
   .field {
     width: 100%; margin: 8px 0; padding: 11px; background: var(--surface);
     border: 1px solid var(--border); border-radius: 8px; color: var(--text);
-  }  @media (min-width: 820px) {
+  }
+  .feed-scroll {
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+  }
+  .feed-scroll::-webkit-scrollbar { display: none; }
+  .feed-slide {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    background: #000;
+    overflow: hidden;
+  }
+  .feed-slide img.feed-bg {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  }
+  .feed-slide .feed-fallback {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--surface-raised), var(--orange-dim)); font-size: 60px;
+  }
+  .feed-slide .feed-gradient {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 45%, rgba(0,0,0,0) 70%);
+  }
+  .feed-slide .feed-info {
+    position: relative; z-index: 2; padding: 24px 90px 32px 20px; color: #fff; width: 100%;
+  }
+  .feed-actions {
+    position: absolute; right: 12px; bottom: 100px; z-index: 3;
+    display: flex; flex-direction: column; gap: 18px; align-items: center;
+  }
+  .feed-action-btn {
+    background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
+    width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; cursor: pointer; color: #fff; backdrop-filter: blur(4px);
+  }
+  @media (min-width: 820px) {
     .ads-sidebar { display: block !important; }
   }
 </style>
@@ -138,6 +178,10 @@
       <div id="marketplaceAdsSidebar" style="display:flex; flex-direction:column; gap:12px;"></div>
     </div>
   </div>
+</div>
+
+<div id="view-feed" class="view" style="max-width:none; padding:0; margin:0;">
+  <div id="feedContainer" class="feed-scroll"></div>
 </div>
 
 <div id="view-listing" class="view">
@@ -386,6 +430,7 @@ function showView(name) {
   if (name === 'moderation') renderModQueue();
   if (name === 'profile') renderProfile();
   if (name === 'discover') renderDiscover();
+  if (name === 'feed' && !pendingFeedTargetId) { sizeFeedContainer(); renderFeed(); }
   if (name === 'events') renderEvents();
   if (name === 'opportunities') renderOpportunities();
 }
@@ -431,7 +476,7 @@ async function renderListings() {
         <p style="color:var(--text-dim); font-size:11px; margin-top:6px;">${item.campus}</p>
       </div>
     `;
-    card.onclick = () => openListing(item.id);
+    card.onclick = () => openFeedAt(item.id);
     grid.appendChild(card);
   });
   if (filtered.length === 0) grid.innerHTML = '<p style="color:var(--text-dim);">No listings match yet.</p>';
@@ -1027,6 +1072,77 @@ function renderAdsInto(elementId, stacked) {
       <p style="color:var(--text-dim); font-size:13px; line-height:1.5;">${p.description}</p>
     </div>
   `).join('');
+}
+
+let pendingFeedTargetId = null;
+
+async function openFeedAt(listingId) {
+  pendingFeedTargetId = listingId;
+  showView('feed');
+  sizeFeedContainer();
+  await renderFeed();
+  const target = document.querySelector(`.feed-slide[data-id="${listingId}"]`);
+  if (target) target.scrollIntoView({ behavior: 'instant', block: 'start' });
+  pendingFeedTargetId = null;
+}
+
+function sizeFeedContainer() {
+  const nav = document.querySelector('body > div:first-child');
+  const container = document.getElementById('feedContainer');
+  if (!nav || !container) return;
+  const h = window.innerHeight - nav.offsetHeight;
+  container.style.height = h + 'px';
+}
+window.addEventListener('resize', () => {
+  const feedView = document.getElementById('view-feed');
+  if (feedView && feedView.classList.contains('active')) sizeFeedContainer();
+});
+
+async function renderFeed() {
+  const container = document.getElementById('feedContainer');
+  container.innerHTML = '<div class="feed-slide" style="height:100%;"><p style="color:#fff; position:relative; z-index:2;">Loading...</p></div>';
+
+  const { data, error } = await supabaseClient
+    .from('listings')
+    .select('*, listing_photos(storage_url)')
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    container.innerHTML = `<div class="feed-slide" style="height:100%;"><div class="feed-info"><p>No listings to browse yet.</p><button onclick="showView('sell')" style="margin-top:10px; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:10px 16px; font-weight:700;">Be the first to sell something</button></div></div>`;
+    return;
+  }
+
+  const feedHeight = container.style.height;
+  container.innerHTML = data.map(item => {
+    const photoUrl = item.listing_photos && item.listing_photos.length > 0 ? item.listing_photos[0].storage_url : null;
+    const bg = photoUrl
+      ? `<img class="feed-bg" src="${photoUrl}">`
+      : `<div class="feed-fallback">📦</div>`;
+    const priceLine = item.compare_at_price && item.compare_at_price > item.price
+      ? `<span class="mono" style="font-size:22px; font-weight:700;">R${item.price}</span> <span style="opacity:0.6; text-decoration:line-through; font-size:14px; margin-left:6px;">R${item.compare_at_price}</span>`
+      : `<span class="mono" style="font-size:22px; font-weight:700;">R${item.price}</span>`;
+    const soldTag = item.sold ? `<span class="badge" style="background:rgba(255,255,255,0.2); margin-left:8px;">Sold</span>` : '';
+    return `
+      <div class="feed-slide" data-id="${item.id}" style="height:${feedHeight};">
+        <button onclick="showView('marketplace')" style="position:absolute; top:14px; left:14px; z-index:3; background:rgba(0,0,0,0.4); border:none; color:#fff; width:38px; height:38px; border-radius:50%; font-size:18px; cursor:pointer;">←</button>
+        ${bg}
+        <div class="feed-gradient"></div>
+        <div class="feed-actions">
+          <button class="feed-action-btn" onclick="buyListing('${item.id}')" title="Buy Now">💳</button>
+          <button class="feed-action-btn" onclick="messageSeller('${item.seller_id}','${item.id}')" title="Message">💬</button>
+          <button class="feed-action-btn" onclick="openListing('${item.id}')" title="View details">ℹ️</button>
+          <button class="feed-action-btn" onclick="reportListing('${item.id}')" title="Report">⚠️</button>
+        </div>
+        <div class="feed-info">
+          <span class="badge orange" style="margin-bottom:8px;">${item.category}</span>${soldTag}
+          <h2 style="font-size:19px; margin:8px 0 6px;">${item.title}</h2>
+          <p style="margin:0 0 6px;">${priceLine}</p>
+          <p style="font-size:13px; opacity:0.85; margin:0;">📍 ${item.campus}</p>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 function onCampusChange() {

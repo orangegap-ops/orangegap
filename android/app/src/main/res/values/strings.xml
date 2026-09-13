@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">OrangeGap</string>
+    <string name="title_activity_main">OrangeGap</string>
+    <string name="package_name">com.orangegap.app</string>
+    <string name="custom_url_scheme">com.orangegap.app</string>
+</resources>

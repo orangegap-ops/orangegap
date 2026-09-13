@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OrangeGap - Bridging The Gaps</title>
+<meta name="description" content="OrangeGap is a South African student marketplace and opportunities platform. Buy and sell with fellow students, discover campus events, and find jobs, internships, bursaries and vacation work - built around your campus.">
+<meta name="keywords" content="student marketplace South Africa, NWU marketplace, campus buy and sell, student jobs, student bursaries, campus events, OrangeGap">
+<link rel="canonical" href="https://orangegap.vercel.app/">
+<meta property="og:title" content="OrangeGap - Bridging The Gaps">
+<meta property="og:description" content="The gap between what you need and who has it - closed. A trusted student marketplace and opportunities platform, built for South African campuses.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://orangegap.vercel.app/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="OrangeGap - Bridging The Gaps">
+<meta name="twitter:description" content="A trusted student marketplace and opportunities platform, built for South African campuses.">
+<meta name="robots" content="index, follow">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -113,6 +124,7 @@
   </div>
   <div style="display:flex; gap:6px; max-width:1100px; margin:0 auto; padding:0 20px 10px; overflow-x:auto;">
     <button class="nav-link" data-view="home" onclick="showView('home')">Home</button>
+    <button class="nav-link" data-view="about" onclick="showView('about')">About</button>
     <button class="nav-link" data-view="marketplace" onclick="showView('marketplace')">Marketplace</button>
     <button class="nav-link" data-view="discover" onclick="showView('discover')">Discover</button>
     <button class="nav-link" data-view="events" onclick="showView('events')">Events</button>
@@ -203,6 +215,33 @@
   <textarea id="sellDesc" placeholder="Description" class="field" style="min-height:90px;"></textarea>
   <button id="sellSubmitBtn" onclick="submitListing()" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Submit for review</button>
   <p id="sellError" style="color:#FF8A8A; font-size:13px;"></p>
+</div>
+
+<div id="view-about" class="view">
+  <h1>About OrangeGap</h1>
+  <p class="mono" style="color:var(--orange); font-size:13px; letter-spacing:1px; margin-bottom:16px;">BRIDGING THE GAPS</p>
+
+  <h2 style="font-size:18px; margin-top:24px;">Our mission</h2>
+  <p style="color:var(--text-dim); line-height:1.7;">
+    OrangeGap exists to close the gap between what students need and who has it. One platform for buying and selling with people you can trust, discovering campus events, and finding jobs, internships, bursaries and vacation work — all built around your specific campus and faculty.
+  </p>
+
+  <h2 style="font-size:18px; margin-top:24px;">Our story</h2>
+  <p style="color:var(--text-dim); line-height:1.7;">
+    OrangeGap started at NWU, built by a student who saw how scattered campus life had become — WhatsApp groups for selling textbooks, Facebook groups for events, noticeboards for jobs, none of it connected or verified. OrangeGap brings all of it into one trusted, campus-first platform.
+  </p>
+
+  <h2 style="font-size:18px; margin-top:24px;">Our team</h2>
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-top:12px;">
+    <div class="eco-card"><b>Founder & CEO</b><p>Vision, product and strategy</p></div>
+    <div class="eco-card"><b>Co-Founder</b><p>Operations and growth</p></div>
+    <div class="eco-card"><b>Co-Founder</b><p>Partnerships and community</p></div>
+  </div>
+
+  <h2 style="font-size:18px; margin-top:24px;">Get in touch</h2>
+  <p style="color:var(--text-dim); line-height:1.7;">
+    Questions, partnership ideas, or feedback? Reach out via the contact details on our social pages, or message us directly through the platform.
+  </p>
 </div>
 
 <div id="view-opportunities" class="view">
@@ -654,14 +693,18 @@ async function uploadListingPhotos(listingId, files) {
     const ext = file.name.split('.').pop();
     const path = `${currentUser.id}/${listingId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const { error: uploadError } = await supabaseClient.storage.from('listing-photos').upload(path, file);
-    if (uploadError) continue;
+    if (uploadError) {
+      console.error('Photo upload failed:', uploadError.message, uploadError);
+      continue;
+    }
     const { data: urlData } = supabaseClient.storage.from('listing-photos').getPublicUrl(path);
     urls.push(urlData.publicUrl);
   }
   if (urls.length > 0) {
-    await supabaseClient.from('listing_photos').insert(
+    const { error: insertError } = await supabaseClient.from('listing_photos').insert(
       urls.map(storage_url => ({ listing_id: listingId, storage_url }))
     );
+    if (insertError) console.error('Saving photo record failed:', insertError.message, insertError);
   }
   return urls;
 }

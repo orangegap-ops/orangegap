@@ -107,18 +107,12 @@
     </div>
     <div style="flex:1;"></div>
     <select id="campusSelect" onchange="onCampusChange()" style="background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:13px;">
-      <option>Wits (Braamfontein)</option>
-      <option>UCT (Rondebosch)</option>
-      <option>UP (Hatfield)</option>
-      <option>UJ (APK)</option>
-      <option>UKZN (Howard College)</option>
-      <option>Stellenbosch</option>
-      <option>Rhodes</option>
       <option>NWU (Potchefstroom)</option>
-      <option>NWU (Mahikeng)</option>
-      <option>NWU (Vanderbijlpark)</option>
     </select>
     <span id="authStatus" style="font-size:13px; color:var(--text-dim);"></span>
+    <button onclick="showView('cart')" style="position:relative; background:transparent; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:15px; cursor:pointer;">
+      🛒<span id="cartBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:var(--orange); color:#1A0D06; font-size:11px; font-weight:700; border-radius:50%; width:18px; height:18px; align-items:center; justify-content:center;">0</span>
+    </button>
     <button id="authBtn" onclick="showView('auth')" style="background:transparent; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700;">Sign in</button>
     <button onclick="showView('sell')" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700;">+ Sell</button>
   </div>
@@ -129,14 +123,13 @@
     <button class="nav-link" data-view="discover" onclick="showView('discover')">Discover</button>
     <button class="nav-link" data-view="events" onclick="showView('events')">Events</button>
     <button class="nav-link" data-view="opportunities" onclick="showView('opportunities')">Opportunities</button>
-    <button class="nav-link" data-view="messages" onclick="showView('messages')">Messages</button>
     <button class="nav-link" data-view="profile" onclick="showView('profile')">Profile</button>
     <button class="nav-link" data-view="moderation" onclick="showView('moderation')">Moderation</button>
   </div>
 </div>
 
 <div id="view-home" class="view active">
-  <p class="mono" id="homeCampusLabel" style="color:var(--orange); font-size:13px; letter-spacing:1px;">WITS (BRAAMFONTEIN)</p>
+  <p class="mono" id="homeCampusLabel" style="color:var(--orange); font-size:13px; letter-spacing:1px;">NWU (POTCHEFSTROOM)</p>
   <h1 style="font-size:44px; line-height:1.1; max-width:600px; margin:10px 0;">
     The gap between what you need and who has it - <span style="color:var(--orange)">closed.</span>
   </h1>
@@ -363,6 +356,17 @@
   <div id="myListings" style="color:var(--text-dim);">Sign in to see your listings.</div>
 </div>
 
+<div id="view-cart" class="view">
+  <h1>Your Cart</h1>
+  <div id="cartItemsList" style="display:flex; flex-direction:column; gap:10px; margin:16px 0;"></div>
+  <div id="cartSummary" style="display:none; border-top:1px solid var(--border); padding-top:16px; margin-top:8px;">
+    <p style="display:flex; justify-content:space-between; font-size:16px; font-weight:700;">
+      <span>Total</span><span class="mono" id="cartTotal" style="color:var(--orange);"></span>
+    </p>
+    <button onclick="startCartCheckout()" style="width:100%; background:var(--success); color:#0B2016; border:none; border-radius:8px; padding:14px; font-weight:700; margin-top:8px;">Checkout all items</button>
+  </div>
+</div>
+
 <div id="view-checkout" class="view">
   <h1>Confirm delivery details</h1>
   <p style="color:var(--text-dim); margin-bottom:16px;">Where should <span id="checkoutItemName"></span> be delivered?</p>
@@ -393,16 +397,7 @@
   </select>
   <select id="authCampus" class="field">
     <option value="">Select your campus</option>
-    <option>Wits (Braamfontein)</option>
-    <option>UCT (Rondebosch)</option>
-    <option>UP (Hatfield)</option>
-    <option>UJ (APK)</option>
-    <option>UKZN (Howard College)</option>
-    <option>Stellenbosch</option>
-    <option>Rhodes</option>
     <option>NWU (Potchefstroom)</option>
-    <option>NWU (Mahikeng)</option>
-    <option>NWU (Vanderbijlpark)</option>
   </select>
   <input id="authPassword" name="password" type="password" placeholder="Password" oninput="checkPasswordStrength()" class="field" autocomplete="new-password">
   <div style="height:5px; border-radius:3px; background:var(--border); margin-bottom:4px; overflow:hidden;">
@@ -443,6 +438,7 @@ async function checkSession() {
     document.getElementById('authStatus').textContent = currentUser.email;
     document.getElementById('authBtn').textContent = 'Sign out';
     document.getElementById('authBtn').onclick = signOut;
+    updateCartBadge();
   }
 }
 
@@ -470,6 +466,7 @@ function showView(name) {
   if (name === 'profile') renderProfile();
   if (name === 'discover') renderDiscover();
   if (name === 'feed' && !pendingFeedTargetId) { sizeFeedContainer(); renderFeed(); }
+  if (name === 'cart') renderCart();
   if (name === 'events') renderEvents();
   if (name === 'opportunities') renderOpportunities();
 }
@@ -530,7 +527,8 @@ async function openListing(id) {
     : `<div style="height:180px; background:linear-gradient(135deg, var(--surface-raised), var(--orange-dim)); border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--orange); font-size:32px; margin-bottom:16px;">📦</div>`;
   const buyButton = item.sold
     ? `<span class="badge" style="background:var(--surface-raised); padding:10px 16px; font-size:14px;">Sold</span>`
-    : `<button onclick="buyListing('${item.id}')" style="background:var(--success); color:#0B2016; border:none; border-radius:8px; padding:12px 20px; font-weight:700;">💳 Buy Now</button>`;
+    : `<button onclick="buyListing('${item.id}')" style="background:var(--success); color:#0B2016; border:none; border-radius:8px; padding:12px 20px; font-weight:700;">💳 Buy Now</button>
+       <button onclick="addToCart('${item.id}')" style="background:transparent; color:var(--orange); border:1px solid var(--orange); border-radius:8px; padding:12px 18px; font-weight:700;">🛒 Add to cart</button>`;
   const priceBlock = item.compare_at_price && item.compare_at_price > item.price
     ? `<p style="margin:0;"><span class="mono" style="color:var(--orange); font-size:24px; font-weight:700;">R${item.price}</span><span style="color:var(--text-dim); font-size:14px; margin-left:10px; text-decoration:line-through;">List: R${item.compare_at_price}</span></p>`
     : `<p class="mono" style="color:var(--orange); font-size:24px; font-weight:700; margin:0;">R${item.price}</p>`;
@@ -555,6 +553,7 @@ async function buyListing(listingId) {
   if (!item || item.sold) { alert('This item is no longer available.'); return; }
   if (item.seller_id === currentUser.id) { alert("You can't buy your own listing."); return; }
 
+  checkoutMode = 'single';
   pendingCheckoutListingId = listingId;
   document.getElementById('checkoutItemName').textContent = item.title;
 
@@ -577,12 +576,41 @@ async function confirmCheckoutAddress() {
   if (!address || !city || !phone) { err.textContent = 'Fill in address, city and phone number.'; return; }
   err.textContent = '';
 
-  // Remember it for next time
   await supabaseClient.from('users').update({
     delivery_address: address, delivery_city: city, delivery_postal_code: postal, delivery_phone: phone
   }).eq('id', currentUser.id);
 
   const fullAddress = `${address}, ${city} ${postal}`.trim();
+
+  if (checkoutMode === 'cart') {
+    const { data: cartRows } = await supabaseClient
+      .from('cart_items').select('listing_id, listings(*)').eq('user_id', currentUser.id);
+
+    const items = (cartRows || []).map(r => r.listings).filter(Boolean);
+    if (items.length === 0) { err.textContent = 'Your cart is empty.'; return; }
+
+    const cartSessionId = crypto.randomUUID();
+    let total = 0;
+    const orderRows = items.map(item => {
+      const payout = item.seller_payout || Math.round(item.price / (1 + PLATFORM_MARKUP) * 100) / 100;
+      total += Number(item.price);
+      return {
+        listing_id: item.id, buyer_id: currentUser.id, seller_id: item.seller_id,
+        amount_paid: item.price, seller_payout: payout, platform_fee: item.price - payout,
+        payment_status: 'unpaid', delivery_address: fullAddress, delivery_phone: phone,
+        cart_session_id: cartSessionId,
+      };
+    });
+
+    const { error } = await supabaseClient.from('orders').insert(orderRows);
+    if (error) { err.textContent = 'Could not start checkout. Try again.'; return; }
+
+    await supabaseClient.from('cart_items').delete().eq('user_id', currentUser.id);
+    await updateCartBadge();
+    redirectToPayFastForCart(cartSessionId, total, items.length);
+    return;
+  }
+
   const { data: item } = await supabaseClient.from('listings').select('*').eq('id', pendingCheckoutListingId).single();
 
   const { data: order, error } = await supabaseClient.from('orders').insert({
@@ -599,6 +627,34 @@ async function confirmCheckoutAddress() {
 
   if (error) { err.textContent = 'Could not start checkout. Try again.'; return; }
   redirectToPayFastForOrder(order.id, item.price, item.title);
+}
+
+function redirectToPayFastForCart(cartSessionId, totalAmount, itemCount) {
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = PAYFAST_URL;
+  const fields = {
+    merchant_id: PAYFAST_MERCHANT_ID,
+    merchant_key: PAYFAST_MERCHANT_KEY,
+    return_url: SITE_URL + '?cart_paid=' + cartSessionId,
+    cancel_url: SITE_URL + '?cart_cancelled=' + cartSessionId,
+    notify_url: PAYFAST_NOTIFY_URL,
+    name_first: currentUser.email.split('@')[0],
+    email_address: currentUser.email,
+    m_payment_id: cartSessionId,
+    amount: Number(totalAmount).toFixed(2),
+    item_name: `OrangeGap cart order (${itemCount} item${itemCount > 1 ? 's' : ''})`,
+    custom_str1: 'cart',
+  };
+  Object.entries(fields).forEach(([key, value]) => {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = key;
+    input.value = value;
+    form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  form.submit();
 }
 
 function redirectToPayFastForOrder(orderId, amount, itemName) {
@@ -797,6 +853,94 @@ async function saveAddress() {
 }
 
 let pendingCheckoutListingId = null;
+let checkoutMode = 'single'; // 'single' or 'cart'
+
+async function addToCart(listingId) {
+  if (!currentUser) { showView('auth'); return; }
+  const { data: item } = await supabaseClient.from('listings').select('id, sold, seller_id').eq('id', listingId).single();
+  if (!item || item.sold) { alert('This item is no longer available.'); return; }
+  if (item.seller_id === currentUser.id) { alert("You can't add your own listing to cart."); return; }
+
+  const { error } = await supabaseClient.from('cart_items').insert({ user_id: currentUser.id, listing_id: listingId });
+  if (error && error.code !== '23505') { alert('Could not add to cart.'); return; } // 23505 = already in cart
+  await updateCartBadge();
+  if (!error) alert('Added to cart.'); else alert('Already in your cart.');
+}
+
+async function removeFromCart(listingId) {
+  await supabaseClient.from('cart_items').delete().eq('user_id', currentUser.id).eq('listing_id', listingId);
+  await updateCartBadge();
+  renderCart();
+}
+
+async function updateCartBadge() {
+  const badge = document.getElementById('cartBadge');
+  if (!currentUser) { badge.style.display = 'none'; return; }
+  const { data } = await supabaseClient.from('cart_items').select('id').eq('user_id', currentUser.id);
+  const count = (data || []).length;
+  if (count > 0) {
+    badge.style.display = 'flex';
+    badge.textContent = count;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function renderCart() {
+  const list = document.getElementById('cartItemsList');
+  const summary = document.getElementById('cartSummary');
+  if (!currentUser) { list.innerHTML = '<p style="color:var(--text-dim);">Sign in to view your cart.</p>'; summary.style.display = 'none'; return; }
+
+  list.innerHTML = 'Loading...';
+  const { data, error } = await supabaseClient
+    .from('cart_items')
+    .select('listing_id, listings(*, listing_photos(storage_url))')
+    .eq('user_id', currentUser.id);
+
+  if (error || !data || data.length === 0) {
+    list.innerHTML = '<p style="color:var(--text-dim);">Your cart is empty.</p>';
+    summary.style.display = 'none';
+    return;
+  }
+
+  let total = 0;
+  list.innerHTML = data.map(row => {
+    const item = row.listings;
+    if (!item) return '';
+    total += Number(item.price);
+    const photoUrl = item.listing_photos && item.listing_photos.length > 0 ? item.listing_photos[0].storage_url : null;
+    const thumb = photoUrl
+      ? `<img src="${photoUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px; background:#fff;">`
+      : `<div style="width:60px; height:60px; border-radius:8px; background:var(--orange-dim); display:flex; align-items:center; justify-content:center;">📦</div>`;
+    return `
+      <div style="display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px;">
+        ${thumb}
+        <div style="flex:1;">
+          <p style="margin:0; font-size:14px;">${item.title}</p>
+          <p class="mono" style="margin:4px 0 0; color:var(--orange); font-size:14px; font-weight:700;">R${item.price}</p>
+        </div>
+        <button onclick="removeFromCart('${item.id}')" style="background:transparent; border:1px solid var(--border); color:var(--text-dim); border-radius:8px; padding:8px 12px; cursor:pointer;">Remove</button>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('cartTotal').textContent = 'R' + total.toFixed(2);
+  summary.style.display = 'block';
+}
+
+async function startCartCheckout() {
+  if (!currentUser) { showView('auth'); return; }
+  checkoutMode = 'cart';
+  document.getElementById('checkoutItemName').textContent = 'your cart items';
+
+  const { data: profile } = await supabaseClient.from('users').select('*').eq('id', currentUser.id).single();
+  document.getElementById('checkoutAddrLine').value = profile?.delivery_address || '';
+  document.getElementById('checkoutAddrCity').value = profile?.delivery_city || '';
+  document.getElementById('checkoutAddrPostal').value = profile?.delivery_postal_code || '';
+  document.getElementById('checkoutAddrPhone').value = profile?.delivery_phone || '';
+
+  showView('checkout');
+}
 
 async function renderDiscover() {
   const grid = document.getElementById('discoverGrid');
@@ -1051,6 +1195,10 @@ function checkPayFastReturn() {
     alert('Payment received! The seller has been notified and your order is confirmed.');
   } else if (params.get('order_cancelled')) {
     alert('Payment was cancelled. The item is still available if you want to try again.');
+  } else if (params.get('cart_paid')) {
+    alert('Payment received! Your cart order is confirmed and sellers have been notified.');
+  } else if (params.get('cart_cancelled')) {
+    alert('Payment was cancelled. Your items were not removed from availability.');
   }
 }
 
@@ -1173,6 +1321,7 @@ async function renderFeed() {
         <div class="feed-gradient"></div>
         <div class="feed-actions">
           <button class="feed-action-btn" onclick="buyListing('${item.id}')" title="Buy Now">💳</button>
+          <button class="feed-action-btn" onclick="addToCart('${item.id}')" title="Add to cart">🛒</button>
           <button class="feed-action-btn" onclick="messageSeller('${item.seller_id}','${item.id}')" title="Message">💬</button>
           <button class="feed-action-btn" onclick="openListing('${item.id}')" title="View details">ℹ️</button>
           <button class="feed-action-btn" onclick="reportListing('${item.id}')" title="Report">⚠️</button>

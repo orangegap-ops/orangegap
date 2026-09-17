@@ -496,8 +496,8 @@ async function renderListings() {
     card.onmouseleave = () => card.style.borderColor = 'var(--border)';
     const photoUrl = item.listing_photos && item.listing_photos.length > 0 ? item.listing_photos[0].storage_url : null;
     const thumb = photoUrl
-      ? `<div style="background:#fff; height:180px; display:flex; align-items:center; justify-content:center;"><img src="${photoUrl}" style="max-width:100%; max-height:100%; object-fit:contain; display:block;"></div>`
-      : `<div style="height:180px; background:linear-gradient(135deg, var(--surface-raised), var(--orange-dim)); display:flex; align-items:center; justify-content:center; color:var(--orange); font-size:28px;">📦</div>`;
+      ? `<div style="background:#fff; aspect-ratio:1/1; width:100%; display:flex; align-items:center; justify-content:center; padding:10px; box-sizing:border-box;"><img src="${photoUrl}" loading="lazy" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; display:block;"></div>`
+      : `<div style="aspect-ratio:1/1; width:100%; background:linear-gradient(135deg, var(--surface-raised), var(--orange-dim)); display:flex; align-items:center; justify-content:center; color:var(--orange); font-size:28px;">📦</div>`;
     const priceRow = item.compare_at_price && item.compare_at_price > item.price
       ? `<p style="margin:6px 0 0;"><span class="mono" style="color:var(--text); font-size:17px; font-weight:700;">R${item.price}</span><span style="color:var(--text-dim); font-size:12px; margin-left:8px; text-decoration:line-through;">List: R${item.compare_at_price}</span></p>`
       : `<p class="mono" style="color:var(--text); font-size:17px; font-weight:700; margin:6px 0 0;">R${item.price}</p>`;
@@ -523,7 +523,7 @@ async function openListing(id) {
   if (!item) return;
   const photos = item.listing_photos || [];
   const photoStrip = photos.length > 0
-    ? `<div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:16px;">${photos.map(p => `<img src="${p.storage_url}" style="width:160px; height:160px; object-fit:cover; border-radius:10px; flex-shrink:0;">`).join('')}</div>`
+    ? `<div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:16px;">${photos.map(p => `<div style="width:160px; height:160px; flex-shrink:0; background:#fff; border-radius:10px; display:flex; align-items:center; justify-content:center; padding:8px; box-sizing:border-box;"><img src="${p.storage_url}" loading="lazy" style="max-width:100%; max-height:100%; object-fit:contain;"></div>`).join('')}</div>`
     : `<div style="height:180px; background:linear-gradient(135deg, var(--surface-raised), var(--orange-dim)); border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--orange); font-size:32px; margin-bottom:16px;">📦</div>`;
   const buyButton = item.sold
     ? `<span class="badge" style="background:var(--surface-raised); padding:10px 16px; font-size:14px;">Sold</span>`
@@ -743,10 +743,40 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+function resizeImageFile(file, maxDimension = 1200, quality = 0.82) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > height && width > maxDimension) {
+        height = Math.round(height * (maxDimension / width));
+        width = maxDimension;
+      } else if (height >= width && height > maxDimension) {
+        width = Math.round(width * (maxDimension / height));
+        height = maxDimension;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(objectUrl);
+      canvas.toBlob((blob) => {
+        if (!blob) { resolve(file); return; }
+        resolve(new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' }));
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => resolve(file);
+    img.src = objectUrl;
+  });
+}
+
 async function uploadListingPhotos(listingId, files) {
   const urls = [];
-  for (const file of Array.from(files).slice(0, 5)) {
-    const ext = file.name.split('.').pop();
+  for (const rawFile of Array.from(files).slice(0, 5)) {
+    const file = await resizeImageFile(rawFile);
+    const ext = 'jpg';
     const path = `${currentUser.id}/${listingId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const { error: uploadError } = await supabaseClient.storage.from('listing-photos').upload(path, file);
     if (uploadError) {
@@ -910,7 +940,7 @@ async function renderCart() {
     total += Number(item.price);
     const photoUrl = item.listing_photos && item.listing_photos.length > 0 ? item.listing_photos[0].storage_url : null;
     const thumb = photoUrl
-      ? `<img src="${photoUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px; background:#fff;">`
+      ? `<div style="width:60px; height:60px; flex-shrink:0; background:#fff; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:5px; box-sizing:border-box;"><img src="${photoUrl}" loading="lazy" style="max-width:100%; max-height:100%; object-fit:contain;"></div>`
       : `<div style="width:60px; height:60px; border-radius:8px; background:var(--orange-dim); display:flex; align-items:center; justify-content:center;">📦</div>`;
     return `
       <div style="display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px;">

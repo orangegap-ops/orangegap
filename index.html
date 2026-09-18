@@ -18,79 +18,177 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+  /* ---- tokens ---- */
   :root {
     --ink: #14161C; --surface: #1C1F29; --surface-raised: #242836;
     --border: rgba(255,255,255,0.08); --orange: #FF5B1E; --orange-dim: #3A2115;
     --amber: #FFB627; --text: #F5F3EE; --text-dim: #9A9DAB;
     --success: #35C87D; --success-dim: #123322;
   }
+
+  /* ---- base ---- */
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--ink); color: var(--text); font-family: 'Inter', sans-serif; }
-  h1, h2, h3, .brand { font-family: 'Space Grotesk', sans-serif; }
+  h1, h2, h3, .brand { font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 0; }
+  h3 { font-size: 14px; margin: 0; }
+  p { line-height: 1.55; }
+  a { color: var(--orange); }
   .mono { font-family: 'IBM Plex Mono', monospace; }
-  .view { display: none; max-width: 1100px; margin: 0 auto; padding: 28px 20px 70px; }
+  .muted { color: var(--text-dim); }
+  .view { display: none; max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
   .view.active { display: block; }
   button { cursor: pointer; font-family: 'Inter', sans-serif; }
   input, select, textarea { font-family: 'Inter', sans-serif; }
+
+  /* ---- page heading ---- */
+  .page-head { margin-bottom: 20px; }
+  .page-head p { margin: 4px 0 0; color: var(--text-dim); font-size: 14px; max-width: 520px; }
+  .kicker { color: var(--orange); font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  /* ---- buttons ---- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    border: none; border-radius: 8px; padding: 11px 18px; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif; line-height: 1.2;
+  }
+  .btn-primary { background: var(--orange); color: #1A0D06; }
+  .btn-success { background: var(--success); color: #0B2016; }
+  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+  .btn-block { width: 100%; padding: 13px; }
+  .btn-sm { padding: 7px 12px; font-size: 13px; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ---- form fields ---- */
+  .field {
+    width: 100%; margin: 8px 0; padding: 11px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px;
+  }
+  .field-label { display: block; margin: 8px 0 6px; font-size: 13px; font-weight: 600; color: var(--text-dim); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .error-text { color: #FF8A8A; font-size: 13px; margin-top: 4px; min-height: 16px; }
+  .helper-text { color: var(--text-dim); font-size: 12px; margin: -4px 0 10px; }
+  .form-narrow { max-width: 480px; }
+
+  /* ---- badges ---- */
   .badge {
     display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600;
-    padding: 3px 9px; border-radius: 20px; background: rgba(255,255,255,0.06); color: var(--text-dim);
+    padding: 3px 9px; border-radius: 5px; background: rgba(255,255,255,0.06); color: var(--text-dim);
   }
   .badge.success { background: var(--success-dim); color: var(--success); }
   .badge.orange { background: var(--orange-dim); color: var(--orange); }
+
+  /* ---- nav ---- */
   .nav-link {
-    background: transparent; color: var(--text-dim); border: none; border-radius: 20px;
-    padding: 6px 12px; font-size: 13px; font-weight: 600; white-space: nowrap;
+    background: transparent; color: var(--text-dim); border: none; border-radius: 6px;
+    padding: 7px 11px; font-size: 13px; font-weight: 600; white-space: nowrap;
   }
-  .nav-link.active { background: var(--orange-dim); color: var(--orange); }
-  .eco-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; cursor: pointer; }
-  .eco-card b { display: block; margin-bottom: 6px; }
-  .eco-card p { color: var(--text-dim); font-size: 13px; margin: 0; }
-  .field {
-    width: 100%; margin: 8px 0; padding: 11px; background: var(--surface);
-    border: 1px solid var(--border); border-radius: 8px; color: var(--text);
+  .nav-link.active { background: var(--surface); color: var(--orange); }
+
+  /* ---- simple list rows (used for Discover / Events / Opportunities) ---- */
+  .row-list { border-top: 1px solid var(--border); }
+  .row-item {
+    display: flex; gap: 14px; align-items: flex-start; padding: 16px 0;
+    border-bottom: 1px solid var(--border);
   }
-  .feed-scroll {
-    overflow-y: scroll;
-    scroll-snap-type: y mandatory;
-    scrollbar-width: none;
+  .row-item .row-main { flex: 1; min-width: 0; }
+  .row-item h3 { margin-bottom: 4px; }
+  .row-item p { margin: 2px 0 0; font-size: 13px; }
+  .row-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+  .row-date {
+    flex-shrink: 0; width: 64px; text-align: center; padding: 8px 0; border-radius: 8px;
+    background: var(--surface); font-size: 11px; color: var(--text-dim); line-height: 1.3;
   }
+
+  /* ---- sponsored / ad slot: quieter than a big glowing card ---- */
+  .ad-slot {
+    border-left: 2px solid var(--orange); background: var(--surface); border-radius: 6px;
+    padding: 14px 16px; min-height: 128px; display: flex; flex-direction: column; justify-content: center;
+  }
+  .ad-slot.empty { border-left-style: dashed; border-color: var(--border); text-align: left; }
+  .ad-slot h3 { margin: 6px 0 4px; font-size: 14px; }
+  .ad-slot p { font-size: 12px; margin: 0; color: var(--text-dim); }
+
+  /* ---- home hero + feature list (replaces repeated card grid) ---- */
+  .hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: start; }
+  .hero h1 { font-size: 38px; line-height: 1.12; margin: 8px 0 14px; max-width: 480px; font-weight: 700; }
+  .hero-panel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px;
+  }
+  .hero-panel-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .hero-panel-head span { font-size: 12px; color: var(--text-dim); cursor: pointer; }
+  .feature-list { margin-top: 46px; border-top: 1px solid var(--border); }
+  .feature-row {
+    display: grid; grid-template-columns: 160px 1fr; gap: 20px; padding: 18px 0;
+    border-bottom: 1px solid var(--border); cursor: pointer;
+  }
+  .feature-row:hover .feature-name { color: var(--orange); }
+  .feature-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; }
+  .feature-row p { margin: 0; color: var(--text-dim); font-size: 13px; max-width: 460px; }
+
+  /* ---- product grid (marketplace) ---- */
+  .product-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden; cursor: pointer;
+  }
+  .product-card:hover { border-color: var(--orange); }
+  .product-thumb { aspect-ratio: 1/1; width: 100%; overflow: hidden; background: var(--surface-raised); }
+  .product-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .product-thumb.empty { display: flex; align-items: center; justify-content: center; color: var(--orange); font-size: 26px; }
+  .product-body { padding: 12px; }
+  .product-title {
+    font-size: 13px; margin: 0; color: var(--text); line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .product-price { margin: 6px 0 0; font-size: 16px; font-weight: 700; }
+  .product-price .was { color: var(--text-dim); font-size: 12px; margin-left: 6px; text-decoration: line-through; font-weight: 400; }
+
+  /* ---- photo frame with visible product on white (detail page / cart) ---- */
+  .photo-frame {
+    background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    box-sizing: border-box;
+  }
+  .photo-frame img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+  /* ---- feed (unchanged behaviour, tidied selectors) ---- */
+  .feed-scroll { overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
   .feed-scroll::-webkit-scrollbar { display: none; }
   .feed-slide {
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-    position: relative;
-    width: 100%;
-    display: flex;
-    align-items: flex-end;
-    background: #000;
-    overflow: hidden;
+    scroll-snap-align: start; scroll-snap-stop: always; position: relative;
+    width: 100%; display: flex; align-items: flex-end; background: #000; overflow: hidden;
   }
-  .feed-slide img.feed-bg {
-    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-  }
+  .feed-slide img.feed-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .feed-slide .feed-fallback {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, var(--surface-raised), var(--orange-dim)); font-size: 60px;
+    background: var(--surface-raised); font-size: 60px;
   }
   .feed-slide .feed-gradient {
     position: absolute; inset: 0;
     background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 45%, rgba(0,0,0,0) 70%);
   }
-  .feed-slide .feed-info {
-    position: relative; z-index: 2; padding: 24px 90px 32px 20px; color: #fff; width: 100%;
-  }
-  .feed-actions {
-    position: absolute; right: 12px; bottom: 100px; z-index: 3;
-    display: flex; flex-direction: column; gap: 18px; align-items: center;
-  }
+  .feed-slide .feed-info { position: relative; z-index: 2; padding: 24px 90px 32px 20px; color: #fff; width: 100%; }
+  .feed-actions { position: absolute; right: 12px; bottom: 100px; z-index: 3; display: flex; flex-direction: column; gap: 18px; align-items: center; }
   .feed-action-btn {
     background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
     width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
     font-size: 20px; cursor: pointer; color: #fff; backdrop-filter: blur(4px);
   }
-  @media (min-width: 820px) {
-    .ads-sidebar { display: block !important; }
+  .feed-back-btn {
+    position: absolute; top: 14px; left: 14px; z-index: 3; background: rgba(0,0,0,0.4);
+    border: none; color: #fff; width: 38px; height: 38px; border-radius: 50%; font-size: 18px; cursor: pointer;
+  }
+
+  /* ---- cart rows ---- */
+  .cart-row { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+  .cart-row .cart-title { margin: 0; font-size: 14px; }
+  .cart-row .cart-price { margin: 4px 0 0; font-size: 14px; font-weight: 700; color: var(--orange); }
+
+  @media (min-width: 820px) { .ads-sidebar { display: block !important; } }
+  @media (max-width: 780px) {
+    .hero { grid-template-columns: 1fr; }
+    .feature-row { grid-template-columns: 1fr; gap: 4px; }
   }
 </style>
 </head>
@@ -98,25 +196,25 @@
 
 <div style="border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--ink); z-index:20;">
   <div style="max-width:1100px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-    <div class="brand" style="font-size:21px; font-weight:700; cursor:pointer;" onclick="showView('home')">
+    <div class="brand" style="font-size:20px; cursor:pointer;" onclick="showView('home')">
       Orange<span style="color:var(--orange)">Gap</span>
     </div>
     <div style="flex:1; max-width:340px; display:flex; gap:6px;">
-      <input id="navSearchBox" placeholder="Search the marketplace..." style="width:100%; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:13px;" onkeydown="if(event.key==='Enter') runNavSearch();">
-      <button onclick="runNavSearch()" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:0 12px; font-size:13px; font-weight:700;">Search</button>
+      <input id="navSearchBox" class="field" style="margin:0; padding:8px 10px; font-size:13px;" placeholder="Search the marketplace" onkeydown="if(event.key==='Enter') runNavSearch();">
+      <button onclick="runNavSearch()" class="btn btn-primary btn-sm">Search</button>
     </div>
     <div style="flex:1;"></div>
-    <select id="campusSelect" onchange="onCampusChange()" style="background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:13px;">
+    <select id="campusSelect" onchange="onCampusChange()" class="field" style="width:auto; margin:0; padding:8px 10px; font-size:13px;">
       <option>NWU (Potchefstroom)</option>
     </select>
-    <span id="authStatus" style="font-size:13px; color:var(--text-dim);"></span>
-    <button onclick="showView('cart')" style="position:relative; background:transparent; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:15px; cursor:pointer;">
+    <span id="authStatus" class="muted" style="font-size:13px;"></span>
+    <button onclick="showView('cart')" class="btn btn-ghost" style="position:relative; padding:8px 12px;">
       🛒<span id="cartBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:var(--orange); color:#1A0D06; font-size:11px; font-weight:700; border-radius:50%; width:18px; height:18px; align-items:center; justify-content:center;">0</span>
     </button>
-    <button id="authBtn" onclick="showView('auth')" style="background:transparent; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700;">Sign in</button>
-    <button onclick="showView('sell')" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700;">+ Sell</button>
+    <button id="authBtn" onclick="showView('auth')" class="btn btn-outline btn-sm">Sign in</button>
+    <button onclick="showView('sell')" class="btn btn-primary btn-sm">+ Sell</button>
   </div>
-  <div style="display:flex; gap:6px; max-width:1100px; margin:0 auto; padding:0 20px 10px; overflow-x:auto;">
+  <div style="display:flex; gap:4px; max-width:1100px; margin:0 auto; padding:0 20px 10px; overflow-x:auto;">
     <button class="nav-link" data-view="home" onclick="showView('home')">Home</button>
     <button class="nav-link" data-view="about" onclick="showView('about')">About</button>
     <button class="nav-link" data-view="marketplace" onclick="showView('marketplace')">Marketplace</button>
@@ -129,41 +227,52 @@
 </div>
 
 <div id="view-home" class="view active">
-  <p class="mono" id="homeCampusLabel" style="color:var(--orange); font-size:13px; letter-spacing:1px;">NWU (POTCHEFSTROOM)</p>
-  <h1 style="font-size:44px; line-height:1.1; max-width:600px; margin:10px 0;">
-    The gap between what you need and who has it - <span style="color:var(--orange)">closed.</span>
-  </h1>
-  <p style="color:var(--text-dim); font-size:16px; max-width:520px; line-height:1.6;">
-    One platform for buying, selling, working and finding opportunities - built around your campus, verified by your fellow students.
-  </p>
-
-  <div style="display:flex; gap:12px; margin:22px 0 10px;">
-    <button onclick="showView('marketplace')" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:13px 22px; font-weight:700;">Browse marketplace</button>
-    <button onclick="showView('sell')" style="background:transparent; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:13px 22px; font-weight:700;">Sell something</button>
-  </div>
-
-  <div style="margin-top:40px;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="font-size:18px; margin:0;">📣 Sponsored</h2>
-      <span onclick="showView('discover')" style="color:var(--text-dim); font-size:12px; cursor:pointer;">See all →</span>
+  <div class="hero">
+    <div>
+      <p class="mono kicker" id="homeCampusLabel">NWU (POTCHEFSTROOM)</p>
+      <h1>The gap between what you need and who has it - <span style="color:var(--orange)">closed.</span></h1>
+      <p class="muted" style="font-size:15px; max-width:440px;">
+        Buy and sell with people at your own campus, find out what's happening around you, and pick up jobs, bursaries and internships sorted by faculty.
+      </p>
+      <div class="btn-row" style="margin-top:20px;">
+        <button onclick="showView('marketplace')" class="btn btn-primary">Browse marketplace</button>
+        <button onclick="showView('sell')" class="btn btn-outline">Sell something</button>
+      </div>
     </div>
-    <div id="homeAdsStrip" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-top:12px;"></div>
+    <div class="hero-panel">
+      <div class="hero-panel-head">
+        <h2>Sponsored</h2>
+        <span onclick="showView('discover')">See all &rarr;</span>
+      </div>
+      <div id="homeAdsStrip" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
   </div>
 
-  <h2 style="font-size:20px; margin-top:40px;">The OrangeGap ecosystem</h2>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-top:16px;">
-    <div class="eco-card" onclick="showView('marketplace')"><b>Marketplace</b><p>Buy and sell with students nearby</p></div>
-    <div class="eco-card" onclick="showView('opportunities')"><b>Services</b><p>Tutoring, design, repairs and more</p></div>
-    <div class="eco-card" onclick="showView('opportunities')"><b>Jobs</b><p>Part-time work around your timetable</p></div>
-    <div class="eco-card" onclick="showView('opportunities')"><b>Bursaries</b><p>Funding matched to your field</p></div>
+  <div class="feature-list">
+    <div class="feature-row" onclick="showView('marketplace')">
+      <span class="feature-name">Marketplace</span>
+      <p>Textbooks, electronics, appliances and everyday essentials, bought and sold between students who share a campus.</p>
+    </div>
+    <div class="feature-row" onclick="showView('opportunities')">
+      <span class="feature-name">Services</span>
+      <p>Tutoring, design work, repairs and other services students at NWU offer each other.</p>
+    </div>
+    <div class="feature-row" onclick="showView('opportunities')">
+      <span class="feature-name">Jobs</span>
+      <p>Part-time and vacation work that fits around lectures, posted by faculty.</p>
+    </div>
+    <div class="feature-row" onclick="showView('opportunities')">
+      <span class="feature-name">Bursaries</span>
+      <p>Funding opportunities matched to your field of study.</p>
+    </div>
   </div>
 </div>
 
 <div id="view-marketplace" class="view">
-  <h1>Marketplace</h1>
+  <div class="page-head"><h1>Marketplace</h1></div>
   <div style="display:flex; gap:24px; align-items:flex-start;">
     <div style="flex:1; min-width:0;">
-      <div style="display:flex; gap:10px; flex-wrap:wrap; margin:8px 0 16px;">
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
         <input id="searchBox" oninput="renderListings()" placeholder="Search listings" class="field" style="max-width:300px; margin:0;">
         <select id="categoryFilter" onchange="renderListings()" class="field" style="max-width:180px; margin:0;">
           <option value="">All categories</option>
@@ -175,12 +284,12 @@
       </div>
       <div id="listingsGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:16px;"></div>
     </div>
-    <div style="width:280px; flex-shrink:0; display:none;" id="marketplaceAdsSidebarWrap" class="ads-sidebar">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <h2 style="font-size:14px; margin:0; color:var(--text-dim);">📣 Sponsored</h2>
-        <span onclick="showView('discover')" style="color:var(--text-dim); font-size:11px; cursor:pointer;">See all →</span>
+    <div style="width:260px; flex-shrink:0; display:none;" id="marketplaceAdsSidebarWrap" class="ads-sidebar">
+      <div class="hero-panel-head" style="margin-bottom:10px;">
+        <h2 style="font-size:13px; color:var(--text-dim);">Sponsored</h2>
+        <span onclick="showView('discover')" class="muted" style="font-size:11px; cursor:pointer;">See all &rarr;</span>
       </div>
-      <div id="marketplaceAdsSidebar" style="display:flex; flex-direction:column; gap:12px;"></div>
+      <div id="marketplaceAdsSidebar" style="display:flex; flex-direction:column; gap:10px;"></div>
     </div>
   </div>
 </div>
@@ -190,13 +299,13 @@
 </div>
 
 <div id="view-listing" class="view">
-  <button onclick="showView('marketplace')" style="background:none; border:none; color:var(--text-dim);">&larr; Back</button>
+  <button onclick="showView('marketplace')" class="btn btn-ghost btn-sm" style="border:none; padding-left:0;">&larr; Back</button>
   <div id="listingDetailContent"></div>
 </div>
 
-<div id="view-sell" class="view">
-  <h1>Sell an item</h1>
-  <label style="color:var(--text-dim); font-size:13px; font-weight:600; display:block; margin:8px 0 6px;">Photos</label>
+<div id="view-sell" class="view form-narrow">
+  <div class="page-head"><h1>Sell an item</h1></div>
+  <label class="field-label">Photos</label>
   <input id="sellPhotos" type="file" accept="image/*" multiple class="field">
   <div id="sellPhotoPreview" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;"></div>
   <input id="sellTitle" placeholder="Title" class="field">
@@ -206,41 +315,45 @@
   <input id="sellPrice" type="number" placeholder="What you want to receive (ZAR)" class="field">
   <input id="sellComparePrice" type="number" placeholder="Original / store price (optional, shown crossed out)" class="field">
   <textarea id="sellDesc" placeholder="Description" class="field" style="min-height:90px;"></textarea>
-  <button id="sellSubmitBtn" onclick="submitListing()" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Submit for review</button>
-  <p id="sellError" style="color:#FF8A8A; font-size:13px;"></p>
+  <button id="sellSubmitBtn" onclick="submitListing()" class="btn btn-primary btn-block">Submit for review</button>
+  <p id="sellError" class="error-text"></p>
 </div>
 
 <div id="view-about" class="view">
-  <h1>About OrangeGap</h1>
-  <p class="mono" style="color:var(--orange); font-size:13px; letter-spacing:1px; margin-bottom:16px;">BRIDGING THE GAPS</p>
-
-  <h2 style="font-size:18px; margin-top:24px;">Our mission</h2>
-  <p style="color:var(--text-dim); line-height:1.7;">
-    OrangeGap exists to close the gap between what students need and who has it. One platform for buying and selling with people you can trust, discovering campus events, and finding jobs, internships, bursaries and vacation work — all built around your specific campus and faculty.
-  </p>
-
-  <h2 style="font-size:18px; margin-top:24px;">Our story</h2>
-  <p style="color:var(--text-dim); line-height:1.7;">
-    OrangeGap started at NWU, built by a student who saw how scattered campus life had become — WhatsApp groups for selling textbooks, Facebook groups for events, noticeboards for jobs, none of it connected or verified. OrangeGap brings all of it into one trusted, campus-first platform.
-  </p>
-
-  <h2 style="font-size:18px; margin-top:24px;">Our team</h2>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-top:12px;">
-    <div class="eco-card"><b>Founder & CEO</b><p>Vision, product and strategy</p></div>
-    <div class="eco-card"><b>Co-Founder</b><p>Operations and growth</p></div>
-    <div class="eco-card"><b>Co-Founder</b><p>Partnerships and community</p></div>
+  <div class="page-head">
+    <p class="mono kicker">Bridging the gaps</p>
+    <h1>About OrangeGap</h1>
   </div>
 
-  <h2 style="font-size:18px; margin-top:24px;">Get in touch</h2>
-  <p style="color:var(--text-dim); line-height:1.7;">
+  <h2 style="margin-top:24px;">Our mission</h2>
+  <p class="muted">
+    OrangeGap exists to close the gap between what students need and who has it. One platform for buying and selling with people you can trust, discovering campus events, and finding jobs, internships, bursaries and vacation work - all built around your specific campus and faculty.
+  </p>
+
+  <h2 style="margin-top:24px;">Our story</h2>
+  <p class="muted">
+    OrangeGap started at NWU, built by a student who saw how scattered campus life had become - WhatsApp groups for selling textbooks, Facebook groups for events, noticeboards for jobs, none of it connected or verified. OrangeGap brings all of it into one trusted, campus-first platform.
+  </p>
+
+  <h2 style="margin-top:24px;">Our team</h2>
+  <div class="row-list" style="margin-top:10px;">
+    <div class="row-item"><div class="row-main"><h3>Founder &amp; CEO</h3><p class="muted">Vision, product and strategy</p></div></div>
+    <div class="row-item"><div class="row-main"><h3>Co-Founder</h3><p class="muted">Operations and growth</p></div></div>
+    <div class="row-item"><div class="row-main"><h3>Co-Founder</h3><p class="muted">Partnerships and community</p></div></div>
+  </div>
+
+  <h2 style="margin-top:24px;">Get in touch</h2>
+  <p class="muted">
     Questions, partnership ideas, or feedback? Reach out via the contact details on our social pages, or message us directly through the platform.
   </p>
 </div>
 
 <div id="view-opportunities" class="view">
-  <h1>Opportunities</h1>
-  <p style="color:var(--text-dim); margin-bottom:16px;">Jobs, internships, vacation work and bursaries - filtered by faculty.</p>
-  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;">
+  <div class="page-head">
+    <h1>Opportunities</h1>
+    <p>Jobs, internships, vacation work and bursaries, filtered by faculty.</p>
+  </div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
     <select id="facultyFilter" onchange="renderOpportunities()" class="field" style="max-width:260px; margin:0;">
       <option value="">All faculties</option>
       <option>Economic and Management Sciences</option>
@@ -260,12 +373,12 @@
       <option>Bursary</option>
     </select>
   </div>
-  <button onclick="showView('addOpportunity')" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:11px 18px; font-weight:700; margin-bottom:20px;">+ Post an opportunity</button>
-  <div id="opportunitiesGrid" style="display:flex; flex-direction:column; gap:10px;"></div>
+  <button onclick="showView('addOpportunity')" class="btn btn-primary btn-sm" style="margin-bottom:18px;">+ Post an opportunity</button>
+  <div id="opportunitiesGrid" class="row-list"></div>
 </div>
 
-<div id="view-addOpportunity" class="view">
-  <h1>Post an opportunity</h1>
+<div id="view-addOpportunity" class="view form-narrow">
+  <div class="page-head"><h1>Post an opportunity</h1></div>
   <input id="oppTitle" placeholder="Title (e.g. Marketing Internship)" class="field">
   <select id="oppType" class="field">
     <option>Job</option>
@@ -285,103 +398,111 @@
   </select>
   <textarea id="oppDesc" placeholder="Description" class="field" style="min-height:80px;"></textarea>
   <input id="oppLink" placeholder="Application link or contact (optional)" class="field">
-  <button onclick="submitOpportunity()" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Submit for review</button>
-  <p id="oppError" style="color:#FF8A8A; font-size:13px;"></p>
+  <button onclick="submitOpportunity()" class="btn btn-primary btn-block">Submit for review</button>
+  <p id="oppError" class="error-text"></p>
 </div>
 
 <div id="view-discover" class="view">
-  <h1>Discover</h1>
-  <p style="color:var(--text-dim); margin-bottom:18px;">Local sellers and businesses promoting to your campus.</p>
-  <button onclick="showView('promote')" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:11px 18px; font-weight:700; margin-bottom:20px;">📣 Advertise your business</button>
-  <div id="discoverGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px;"></div>
+  <div class="page-head">
+    <h1>Discover</h1>
+    <p>Local sellers and businesses promoting to your campus.</p>
+  </div>
+  <button onclick="showView('promote')" class="btn btn-primary btn-sm" style="margin-bottom:18px;">Advertise your business</button>
+  <div id="discoverGrid" class="row-list"></div>
 </div>
 
-<div id="view-promote" class="view">
-  <h1>Advertise on OrangeGap</h1>
-  <p style="color:var(--text-dim); margin-bottom:20px;">Reach students at your campus. Promotions are reviewed before going live.</p>
+<div id="view-promote" class="view form-narrow">
+  <div class="page-head">
+    <h1>Advertise on OrangeGap</h1>
+    <p>Reach students at your campus. Promotions are reviewed before going live.</p>
+  </div>
   <input id="promoBusiness" placeholder="Business or service name" class="field">
   <textarea id="promoDesc" placeholder="What are you promoting?" class="field" style="min-height:80px;"></textarea>
   <input id="promoContact" placeholder="Contact info (WhatsApp, email, etc.)" class="field">
   <select id="promoPlan" class="field">
-    <option value="30">1 week - 15 min slots, 5x/day - R30</option>
+    <option value="30">1 week, 15 min slots, 5x/day - R30</option>
   </select>
-  <p style="color:var(--text-dim); font-size:12px; margin:-4px 0 8px;">Your ad rotates into the Sponsored section 5 times a day, 15 minutes per slot, for 7 days.</p>
-  <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; margin:16px 0; color:var(--text-dim); font-size:13px;">
-    💳 Secure payment via PayFast - pay by card, Instant EFT, or your bank app. You'll be redirected to PayFast's secure checkout and brought back here once paid.
+  <p class="helper-text">Your ad rotates into the Sponsored section 5 times a day, 15 minutes per slot, for 7 days.</p>
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px; margin:14px 0; color:var(--text-dim); font-size:13px;">
+    Payment is handled through PayFast - card, Instant EFT or your banking app. You'll be redirected to PayFast's checkout and brought back here once paid.
   </div>
-  <button onclick="submitPromotion()" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Continue to payment</button>
-  <p id="promoError" style="color:#FF8A8A; font-size:13px;"></p>
+  <button onclick="submitPromotion()" class="btn btn-primary btn-block">Continue to payment</button>
+  <p id="promoError" class="error-text"></p>
 </div>
 
 <div id="view-events" class="view">
-  <h1>Events</h1>
-  <p style="color:var(--text-dim); margin-bottom:18px;">What's happening at your campus.</p>
-  <button onclick="showView('addEvent')" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:11px 18px; font-weight:700; margin-bottom:20px;">+ Add an event</button>
-  <div id="eventsGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px;"></div>
+  <div class="page-head">
+    <h1>Events</h1>
+    <p>What's happening at your campus.</p>
+  </div>
+  <button onclick="showView('addEvent')" class="btn btn-primary btn-sm" style="margin-bottom:18px;">+ Add an event</button>
+  <div id="eventsGrid" class="row-list"></div>
 </div>
 
-<div id="view-addEvent" class="view">
-  <h1>Add an event</h1>
+<div id="view-addEvent" class="view form-narrow">
+  <div class="page-head"><h1>Add an event</h1></div>
   <input id="eventTitle" placeholder="Event title" class="field">
   <input id="eventDate" type="datetime-local" class="field">
   <input id="eventLocation" placeholder="Location" class="field">
   <textarea id="eventDesc" placeholder="Description" class="field" style="min-height:80px;"></textarea>
-  <button onclick="submitEvent()" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Submit for review</button>
-  <p id="eventError" style="color:#FF8A8A; font-size:13px;"></p>
+  <button onclick="submitEvent()" class="btn btn-primary btn-block">Submit for review</button>
+  <p id="eventError" class="error-text"></p>
 </div>
 
 <div id="view-messages" class="view">
-  <h1>Messages</h1>
-  <div id="messagesThread" style="border:1px solid var(--border); border-radius:12px; padding:16px; color:var(--text-dim);">
+  <div class="page-head"><h1>Messages</h1></div>
+  <div id="messagesThread" style="border:1px solid var(--border); border-radius:8px; padding:16px; color:var(--text-dim);">
     Sign in to view your conversations.
   </div>
 </div>
 
-<div id="view-profile" class="view">
-  <h1>Profile</h1>
-  <div id="profileInfo"><p style="color:var(--text-dim);">Sign in to view your profile.</p></div>
+<div id="view-profile" class="view form-narrow">
+  <div class="page-head"><h1>Profile</h1></div>
+  <div id="profileInfo"><p class="muted">Sign in to view your profile.</p></div>
 
-  <h3 style="margin-top:24px;">Delivery address</h3>
-  <p style="color:var(--text-dim); font-size:13px; margin-bottom:10px;">Saved once, used automatically at checkout.</p>
+  <h3 style="margin-top:26px; font-size:15px;">Delivery address</h3>
+  <p class="helper-text" style="margin-top:2px;">Saved once, used automatically at checkout.</p>
   <input id="addrLine" placeholder="Street address" class="field">
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+  <div class="field-row">
     <input id="addrCity" placeholder="City / town" class="field">
     <input id="addrPostal" placeholder="Postal code" class="field">
   </div>
   <input id="addrPhone" placeholder="Contact phone number" class="field">
-  <button onclick="saveAddress()" style="background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:11px 18px; font-weight:700; margin:6px 0 4px;">Save address</button>
+  <button onclick="saveAddress()" class="btn btn-outline btn-sm" style="margin:6px 0 4px;">Save address</button>
   <p id="addrSaved" style="color:var(--success); font-size:13px;"></p>
 
-  <h3 style="margin-top:24px;">My listings</h3>
-  <div id="myListings" style="color:var(--text-dim);">Sign in to see your listings.</div>
+  <h3 style="margin-top:26px; font-size:15px;">My listings</h3>
+  <div id="myListings" class="muted" style="margin-top:8px;">Sign in to see your listings.</div>
 </div>
 
-<div id="view-cart" class="view">
-  <h1>Your Cart</h1>
+<div id="view-cart" class="view form-narrow">
+  <div class="page-head"><h1>Your cart</h1></div>
   <div id="cartItemsList" style="display:flex; flex-direction:column; gap:10px; margin:16px 0;"></div>
   <div id="cartSummary" style="display:none; border-top:1px solid var(--border); padding-top:16px; margin-top:8px;">
     <p style="display:flex; justify-content:space-between; font-size:16px; font-weight:700;">
       <span>Total</span><span class="mono" id="cartTotal" style="color:var(--orange);"></span>
     </p>
-    <button onclick="startCartCheckout()" style="width:100%; background:var(--success); color:#0B2016; border:none; border-radius:8px; padding:14px; font-weight:700; margin-top:8px;">Checkout all items</button>
+    <button onclick="startCartCheckout()" class="btn btn-success btn-block" style="margin-top:8px;">Checkout all items</button>
   </div>
 </div>
 
-<div id="view-checkout" class="view">
-  <h1>Confirm delivery details</h1>
-  <p style="color:var(--text-dim); margin-bottom:16px;">Where should <span id="checkoutItemName"></span> be delivered?</p>
+<div id="view-checkout" class="view form-narrow">
+  <div class="page-head">
+    <h1>Confirm delivery details</h1>
+    <p>Where should <span id="checkoutItemName"></span> be delivered?</p>
+  </div>
   <input id="checkoutAddrLine" placeholder="Street address" class="field">
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+  <div class="field-row">
     <input id="checkoutAddrCity" placeholder="City / town" class="field">
     <input id="checkoutAddrPostal" placeholder="Postal code" class="field">
   </div>
   <input id="checkoutAddrPhone" placeholder="Contact phone number" class="field">
-  <button onclick="confirmCheckoutAddress()" style="width:100%; background:var(--success); color:#0B2016; border:none; border-radius:8px; padding:14px; font-weight:700; margin-top:8px;">Continue to payment</button>
-  <p id="checkoutError" style="color:#FF8A8A; font-size:13px;"></p>
+  <button onclick="confirmCheckoutAddress()" class="btn btn-success btn-block" style="margin-top:8px;">Continue to payment</button>
+  <p id="checkoutError" class="error-text"></p>
 </div>
 
-<div id="view-auth" class="view">
-  <h1 id="authTitle">Create your account</h1>
+<div id="view-auth" class="view form-narrow">
+  <div class="page-head"><h1 id="authTitle">Create your account</h1></div>
   <form id="authForm" autocomplete="on" onsubmit="event.preventDefault(); submitAuth();">
   <input id="authEmail" name="email" type="email" placeholder="Email address" class="field" autocomplete="username">
   <select id="authUniversity" class="field">
@@ -400,14 +521,14 @@
     <option>NWU (Potchefstroom)</option>
   </select>
   <input id="authPassword" name="password" type="password" placeholder="Password" oninput="checkPasswordStrength()" class="field" autocomplete="new-password">
-  <div style="height:5px; border-radius:3px; background:var(--border); margin-bottom:4px; overflow:hidden;">
+  <div style="height:4px; border-radius:3px; background:var(--border); margin-bottom:4px; overflow:hidden;">
     <div id="pwStrengthFill" style="height:100%; width:0%; background:var(--orange); transition:width 0.2s;"></div>
   </div>
-  <p id="pwStrengthLabel" style="color:var(--text-dim); font-size:12px; margin:0 0 12px;"></p>
-  <button type="submit" style="width:100%; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:14px; font-weight:700;">Continue</button>
-  <p id="authError" style="color:#FF8A8A; font-size:13px;"></p>
-  <p style="color:var(--text-dim); font-size:12px; margin-top:10px; cursor:pointer;" onclick="toggleAuthMode()"><span id="authToggleText">Already have an account? Sign in</span></p>
-  <p style="color:var(--text-dim); font-size:12px; margin-top:16px;">
+  <p id="pwStrengthLabel" class="helper-text" style="margin:0 0 12px;"></p>
+  <button type="submit" class="btn btn-primary btn-block">Continue</button>
+  <p id="authError" class="error-text"></p>
+  <p class="muted" style="font-size:12px; margin-top:10px; cursor:pointer;" onclick="toggleAuthMode()"><span id="authToggleText">Already have an account? Sign in</span></p>
+  <p class="helper-text" style="margin-top:16px;">
     We never store your password in plain text. Supabase hashes it securely, and your account
     stays inactive until you verify your student email.
   </p>
@@ -415,8 +536,8 @@
 </div>
 
 <div id="view-moderation" class="view">
-  <h1>Moderation queue</h1>
-  <div id="modQueue" style="color:var(--text-dim);">No reports yet.</div>
+  <div class="page-head"><h1>Moderation queue</h1></div>
+  <div id="modQueue" class="muted">No reports yet.</div>
 </div>
 
 <script>
@@ -491,31 +612,27 @@ async function renderListings() {
   grid.innerHTML = '';
   filtered.forEach(item => {
     const card = document.createElement('div');
-    card.style.cssText = 'background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; cursor:pointer; transition:border-color 0.15s;';
-    card.onmouseenter = () => card.style.borderColor = 'var(--orange)';
-    card.onmouseleave = () => card.style.borderColor = 'var(--border)';
+    card.className = 'product-card';
     const photoUrl = item.listing_photos && item.listing_photos.length > 0 ? item.listing_photos[0].storage_url : null;
     const thumb = photoUrl
-      ? `<div style="aspect-ratio:1/1; width:100%; overflow:hidden;"><img src="${photoUrl}" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;"></div>`
-      : `<div style="aspect-ratio:1/1; width:100%; background:linear-gradient(135deg, var(--surface-raised), var(--orange-dim)); display:flex; align-items:center; justify-content:center; color:var(--orange); font-size:28px;">📦</div>`;
+      ? `<div class="product-thumb"><img src="${photoUrl}" loading="lazy"></div>`
+      : `<div class="product-thumb empty">📦</div>`;
     const priceRow = item.compare_at_price && item.compare_at_price > item.price
-      ? `<p style="margin:6px 0 0;"><span class="mono" style="color:var(--text); font-size:17px; font-weight:700;">R${item.price}</span><span style="color:var(--text-dim); font-size:12px; margin-left:8px; text-decoration:line-through;">List: R${item.compare_at_price}</span></p>`
-      : `<p class="mono" style="color:var(--text); font-size:17px; font-weight:700; margin:6px 0 0;">R${item.price}</p>`;
+      ? `<p class="product-price">R${item.price}<span class="was">List: R${item.compare_at_price}</span></p>`
+      : `<p class="product-price">R${item.price}</p>`;
     card.innerHTML = `
       ${thumb}
-      <div style="padding:12px;">
-        <h3 style="font-size:13px; margin:0; color:var(--text); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${item.title}</h3>
+      <div class="product-body">
+        <h3 class="product-title">${item.title}</h3>
         ${priceRow}
-        <div style="display:flex; gap:6px; align-items:center; margin-top:8px;">
-          <span class="badge">${item.category}</span>
-        </div>
-        <p style="color:var(--text-dim); font-size:11px; margin-top:6px;">${item.campus}</p>
+        <div style="margin-top:8px;"><span class="badge">${item.category}</span></div>
+        <p class="muted" style="font-size:11px; margin-top:6px;">${item.campus}</p>
       </div>
     `;
     card.onclick = () => openFeedAt(item.id);
     grid.appendChild(card);
   });
-  if (filtered.length === 0) grid.innerHTML = '<p style="color:var(--text-dim);">No listings match yet.</p>';
+  if (filtered.length === 0) grid.innerHTML = '<p class="muted">No listings match yet.</p>';
 }
 
 async function openListing(id) {
@@ -523,25 +640,25 @@ async function openListing(id) {
   if (!item) return;
   const photos = item.listing_photos || [];
   const photoStrip = photos.length > 0
-    ? `<div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:16px;">${photos.map(p => `<div style="width:160px; height:160px; flex-shrink:0; background:#fff; border-radius:10px; display:flex; align-items:center; justify-content:center; padding:8px; box-sizing:border-box;"><img src="${p.storage_url}" loading="lazy" style="max-width:100%; max-height:100%; object-fit:contain;"></div>`).join('')}</div>`
-    : `<div style="height:180px; background:linear-gradient(135deg, var(--surface-raised), var(--orange-dim)); border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--orange); font-size:32px; margin-bottom:16px;">📦</div>`;
+    ? `<div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:16px;">${photos.map(p => `<div class="photo-frame" style="width:160px; height:160px; flex-shrink:0; padding:8px;"><img src="${p.storage_url}" loading="lazy"></div>`).join('')}</div>`
+    : `<div style="height:180px; background:var(--surface-raised); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--orange); font-size:32px; margin-bottom:16px;">📦</div>`;
   const buyButton = item.sold
     ? `<span class="badge" style="background:var(--surface-raised); padding:10px 16px; font-size:14px;">Sold</span>`
-    : `<button onclick="buyListing('${item.id}')" style="background:var(--success); color:#0B2016; border:none; border-radius:8px; padding:12px 20px; font-weight:700;">💳 Buy Now</button>
-       <button onclick="addToCart('${item.id}')" style="background:transparent; color:var(--orange); border:1px solid var(--orange); border-radius:8px; padding:12px 18px; font-weight:700;">🛒 Add to cart</button>`;
+    : `<button onclick="buyListing('${item.id}')" class="btn btn-success">Buy now</button>
+       <button onclick="addToCart('${item.id}')" class="btn btn-outline">Add to cart</button>`;
   const priceBlock = item.compare_at_price && item.compare_at_price > item.price
-    ? `<p style="margin:0;"><span class="mono" style="color:var(--orange); font-size:24px; font-weight:700;">R${item.price}</span><span style="color:var(--text-dim); font-size:14px; margin-left:10px; text-decoration:line-through;">List: R${item.compare_at_price}</span></p>`
-    : `<p class="mono" style="color:var(--orange); font-size:24px; font-weight:700; margin:0;">R${item.price}</p>`;
+    ? `<p style="margin:0;"><span class="mono" style="color:var(--orange); font-size:22px; font-weight:700;">R${item.price}</span><span class="muted" style="font-size:14px; margin-left:10px; text-decoration:line-through;">List: R${item.compare_at_price}</span></p>`
+    : `<p class="mono" style="color:var(--orange); font-size:22px; font-weight:700; margin:0;">R${item.price}</p>`;
   document.getElementById('listingDetailContent').innerHTML = `
     ${photoStrip}
-    <h1>${item.title}</h1>
+    <h1 style="font-size:20px;">${item.title}</h1>
     ${priceBlock}
-    <p style="color:var(--text-dim); margin-top:10px;">${item.description}</p>
-    <p style="color:var(--text-dim); font-size:13px;">${item.campus}</p>
-    <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+    <p class="muted" style="margin-top:10px;">${item.description}</p>
+    <p class="muted" style="font-size:13px;">${item.campus}</p>
+    <div class="btn-row" style="margin-top:14px;">
       ${buyButton}
-      <button onclick="messageSeller('${item.seller_id}','${item.id}')" style="background:transparent; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:12px 20px; font-weight:700;">Message seller</button>
-      <button onclick="reportListing('${item.id}')" style="background:transparent; color:var(--text-dim); border:1px solid var(--border); border-radius:8px; padding:12px 16px;">⚠ Report</button>
+      <button onclick="messageSeller('${item.seller_id}','${item.id}')" class="btn btn-outline">Message seller</button>
+      <button onclick="reportListing('${item.id}')" class="btn btn-ghost">Report</button>
     </div>
   `;
   showView('listing');
@@ -847,10 +964,10 @@ async function submitListing() {
 
 async function renderProfile() {
   if (!currentUser) {
-    document.getElementById('profileInfo').innerHTML = '<p style="color:var(--text-dim);">Sign in to view your profile.</p>';
+    document.getElementById('profileInfo').innerHTML = '<p class="muted">Sign in to view your profile.</p>';
     return;
   }
-  document.getElementById('profileInfo').innerHTML = `<p>${currentUser.email}</p><span class="badge success">✓ Email verified</span>`;
+  document.getElementById('profileInfo').innerHTML = `<p>${currentUser.email}</p><span class="badge success">Email verified</span>`;
 
   const { data: profile } = await supabaseClient.from('users').select('*').eq('id', currentUser.id).single();
   if (profile) {
@@ -919,7 +1036,7 @@ async function updateCartBadge() {
 async function renderCart() {
   const list = document.getElementById('cartItemsList');
   const summary = document.getElementById('cartSummary');
-  if (!currentUser) { list.innerHTML = '<p style="color:var(--text-dim);">Sign in to view your cart.</p>'; summary.style.display = 'none'; return; }
+  if (!currentUser) { list.innerHTML = '<p class="muted">Sign in to view your cart.</p>'; summary.style.display = 'none'; return; }
 
   list.innerHTML = 'Loading...';
   const { data, error } = await supabaseClient
@@ -928,7 +1045,7 @@ async function renderCart() {
     .eq('user_id', currentUser.id);
 
   if (error || !data || data.length === 0) {
-    list.innerHTML = '<p style="color:var(--text-dim);">Your cart is empty.</p>';
+    list.innerHTML = '<p class="muted">Your cart is empty.</p>';
     summary.style.display = 'none';
     return;
   }
@@ -940,16 +1057,16 @@ async function renderCart() {
     total += Number(item.price);
     const photoUrl = item.listing_photos && item.listing_photos.length > 0 ? item.listing_photos[0].storage_url : null;
     const thumb = photoUrl
-      ? `<div style="width:60px; height:60px; flex-shrink:0; background:#fff; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:5px; box-sizing:border-box;"><img src="${photoUrl}" loading="lazy" style="max-width:100%; max-height:100%; object-fit:contain;"></div>`
-      : `<div style="width:60px; height:60px; border-radius:8px; background:var(--orange-dim); display:flex; align-items:center; justify-content:center;">📦</div>`;
+      ? `<div class="photo-frame" style="width:56px; height:56px; flex-shrink:0; padding:5px;"><img src="${photoUrl}" loading="lazy"></div>`
+      : `<div style="width:56px; height:56px; flex-shrink:0; border-radius:8px; background:var(--surface-raised); display:flex; align-items:center; justify-content:center;">📦</div>`;
     return `
-      <div style="display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px;">
+      <div class="cart-row">
         ${thumb}
         <div style="flex:1;">
-          <p style="margin:0; font-size:14px;">${item.title}</p>
-          <p class="mono" style="margin:4px 0 0; color:var(--orange); font-size:14px; font-weight:700;">R${item.price}</p>
+          <p class="cart-title">${item.title}</p>
+          <p class="mono cart-price">R${item.price}</p>
         </div>
-        <button onclick="removeFromCart('${item.id}')" style="background:transparent; border:1px solid var(--border); color:var(--text-dim); border-radius:8px; padding:8px 12px; cursor:pointer;">Remove</button>
+        <button onclick="removeFromCart('${item.id}')" class="btn btn-ghost btn-sm">Remove</button>
       </div>
     `;
   }).join('');
@@ -981,19 +1098,17 @@ async function renderDiscover() {
     .eq('status', 'approved')
     .order('created_at', { ascending: false });
   if (error) { grid.innerHTML = 'Could not load promotions.'; return; }
-  grid.innerHTML = '';
-  (data || []).forEach(p => {
-    const card = document.createElement('div');
-    card.style.cssText = 'background:var(--surface); border:1px solid var(--orange); border-radius:14px; padding:16px;';
-    card.innerHTML = `
-      <span class="badge orange" style="margin-bottom:8px;">📣 Promoted</span>
-      <h3 style="font-size:15px; margin:8px 0 4px;">${p.business_name}</h3>
-      <p style="color:var(--text-dim); font-size:13px;">${p.description}</p>
-      <p style="color:var(--text-dim); font-size:12px; margin-top:8px;">${p.campus}${p.contact_info ? ' · ' + p.contact_info : ''}</p>
-    `;
-    grid.appendChild(card);
-  });
-  if ((data || []).length === 0) grid.innerHTML = '<p style="color:var(--text-dim);">No promotions live yet - be the first!</p>';
+
+  grid.innerHTML = (data || []).map(p => `
+    <div class="row-item">
+      <div class="row-main">
+        <div class="row-tags"><span class="badge orange">Promoted</span></div>
+        <h3>${p.business_name}</h3>
+        <p class="muted">${p.description}</p>
+        <p class="muted" style="font-size:12px; margin-top:6px;">${p.campus}${p.contact_info ? ' &middot; ' + p.contact_info : ''}</p>
+      </div>
+    </div>
+  `).join('') || '<p class="muted" style="padding:16px 0;">No promotions live yet - be the first.</p>';
 }
 
 const PAYFAST_MERCHANT_ID = 'YOUR_PAYFAST_MERCHANT_ID';
@@ -1064,20 +1179,23 @@ async function renderEvents() {
     .eq('status', 'approved')
     .order('event_date', { ascending: true });
   if (error) { grid.innerHTML = 'Could not load events.'; return; }
-  grid.innerHTML = '';
-  (data || []).forEach(ev => {
-    const card = document.createElement('div');
-    card.style.cssText = 'background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px;';
-    const dateStr = new Date(ev.event_date).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' });
-    card.innerHTML = `
-      <p class="mono" style="color:var(--orange); font-size:12px;">${dateStr}</p>
-      <h3 style="font-size:15px; margin:6px 0 4px;">${ev.title}</h3>
-      <p style="color:var(--text-dim); font-size:13px;">${ev.description}</p>
-      <p style="color:var(--text-dim); font-size:12px; margin-top:8px;">📍 ${ev.location || ev.campus}</p>
+
+  grid.innerHTML = (data || []).map(ev => {
+    const d = new Date(ev.event_date);
+    const month = d.toLocaleString('en-ZA', { month: 'short' });
+    const day = d.toLocaleString('en-ZA', { day: 'numeric' });
+    const time = d.toLocaleString('en-ZA', { hour: 'numeric', minute: '2-digit' });
+    return `
+      <div class="row-item">
+        <div class="row-date"><div class="mono" style="font-size:15px; font-weight:700; color:var(--orange);">${day}</div>${month.toUpperCase()}<br>${time}</div>
+        <div class="row-main">
+          <h3>${ev.title}</h3>
+          <p class="muted">${ev.description}</p>
+          <p class="muted" style="font-size:12px; margin-top:6px;">${ev.location || ev.campus}</p>
+        </div>
+      </div>
     `;
-    grid.appendChild(card);
-  });
-  if ((data || []).length === 0) grid.innerHTML = '<p style="color:var(--text-dim);">No events yet - add the first one!</p>';
+  }).join('') || '<p class="muted" style="padding:16px 0;">No events yet - add the first one.</p>';
 }
 
 async function submitEvent() {
@@ -1119,16 +1237,18 @@ async function renderOpportunities() {
   if (error) { grid.innerHTML = 'Could not load opportunities.'; return; }
 
   grid.innerHTML = (data || []).map(o => `
-    <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px;">
-      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
-        <span class="badge orange">${o.type}</span>
-        <span class="badge">${o.faculty}</span>
+    <div class="row-item">
+      <div class="row-main">
+        <div class="row-tags">
+          <span class="badge orange">${o.type}</span>
+          <span class="badge">${o.faculty}</span>
+        </div>
+        <h3>${o.title}</h3>
+        <p class="muted">${o.description}</p>
+        ${o.link ? `<p style="font-size:12px; margin-top:6px;"><a href="${o.link}" target="_blank">Apply / learn more &rarr;</a></p>` : ''}
       </div>
-      <h3 style="font-size:15px; margin:0 0 4px;">${o.title}</h3>
-      <p style="color:var(--text-dim); font-size:13px;">${o.description}</p>
-      ${o.link ? `<p style="font-size:12px; margin-top:8px;"><a href="${o.link}" target="_blank" style="color:var(--orange);">Apply / learn more →</a></p>` : ''}
     </div>
-  `).join('') || '<p style="color:var(--text-dim);">No opportunities match yet - check back soon or post one.</p>';
+  `).join('') || '<p class="muted" style="padding:16px 0;">No opportunities match yet - check back soon or post one.</p>';
 }
 
 async function submitOpportunity() {
@@ -1263,20 +1383,20 @@ async function loadHomeAds() {
 }
 
 function renderHomeAdsSlice() {
-  renderAdsInto('homeAdsStrip', false);
-  renderAdsInto('marketplaceAdsSidebar', true);
+  renderAdsInto('homeAdsStrip');
+  renderAdsInto('marketplaceAdsSidebar');
 }
 
-function renderAdsInto(elementId, stacked) {
+function renderAdsInto(elementId) {
   const el = document.getElementById(elementId);
   if (!el) return;
 
   if (allHomeAds.length === 0) {
     const placeholderCard = (i) => `
-      <div style="background:var(--surface); border:1px dashed var(--border); border-radius:12px; padding:22px 14px; text-align:center; min-height:150px; display:flex; flex-direction:column; justify-content:center;">
-        <span class="badge" style="margin-bottom:6px; align-self:center;">Ad space ${i}</span>
-        <p style="color:var(--text-dim); font-size:12px; margin:8px 0 0;">Your business could be here.</p>
-        <span onclick="showView('promote')" style="color:var(--orange); font-size:12px; cursor:pointer; display:inline-block; margin-top:8px;">Advertise here →</span>
+      <div class="ad-slot empty">
+        <span class="badge">Ad space ${i}</span>
+        <p style="margin-top:8px;">Your business could be here.</p>
+        <span onclick="showView('promote')" style="color:var(--orange); cursor:pointer; margin-top:6px; display:inline-block;">Advertise here &rarr;</span>
       </div>`;
     el.innerHTML = [1, 2, 3].map(placeholderCard).join('');
     return;
@@ -1287,10 +1407,10 @@ function renderAdsInto(elementId, stacked) {
     slice.push(allHomeAds[(homeAdsRotationIndex + i) % allHomeAds.length]);
   }
   el.innerHTML = slice.map(p => `
-    <div style="background:var(--surface); border:1px solid var(--orange); border-radius:12px; padding:20px 16px; min-height:150px; display:flex; flex-direction:column; justify-content:center;">
-      <span class="badge orange" style="margin-bottom:6px;">📣 Ad</span>
-      <h3 style="font-size:15px; margin:6px 0 6px;">${p.business_name}</h3>
-      <p style="color:var(--text-dim); font-size:13px; line-height:1.5;">${p.description}</p>
+    <div class="ad-slot">
+      <span class="badge orange">Ad</span>
+      <h3>${p.business_name}</h3>
+      <p>${p.description}</p>
     </div>
   `).join('');
 }
@@ -1330,7 +1450,7 @@ async function renderFeed() {
     .order('created_at', { ascending: false });
 
   if (error || !data || data.length === 0) {
-    container.innerHTML = `<div class="feed-slide" style="height:100%;"><div class="feed-info"><p>No listings to browse yet.</p><button onclick="showView('sell')" style="margin-top:10px; background:var(--orange); color:#1A0D06; border:none; border-radius:8px; padding:10px 16px; font-weight:700;">Be the first to sell something</button></div></div>`;
+    container.innerHTML = `<div class="feed-slide" style="height:100%;"><div class="feed-info"><p>No listings to browse yet.</p><button onclick="showView('sell')" class="btn btn-primary" style="margin-top:10px;">Be the first to sell something</button></div></div>`;
     return;
   }
 
@@ -1346,7 +1466,7 @@ async function renderFeed() {
     const soldTag = item.sold ? `<span class="badge" style="background:rgba(255,255,255,0.2); margin-left:8px;">Sold</span>` : '';
     return `
       <div class="feed-slide" data-id="${item.id}" style="height:${feedHeight};">
-        <button onclick="showView('marketplace')" style="position:absolute; top:14px; left:14px; z-index:3; background:rgba(0,0,0,0.4); border:none; color:#fff; width:38px; height:38px; border-radius:50%; font-size:18px; cursor:pointer;">←</button>
+        <button onclick="showView('marketplace')" class="feed-back-btn">&larr;</button>
         ${bg}
         <div class="feed-gradient"></div>
         <div class="feed-actions">
@@ -1360,7 +1480,7 @@ async function renderFeed() {
           <span class="badge orange" style="margin-bottom:8px;">${item.category}</span>${soldTag}
           <h2 style="font-size:19px; margin:8px 0 6px;">${item.title}</h2>
           <p style="margin:0 0 6px;">${priceLine}</p>
-          <p style="font-size:13px; opacity:0.85; margin:0;">📍 ${item.campus}</p>
+          <p style="font-size:13px; opacity:0.85; margin:0;">${item.campus}</p>
         </div>
       </div>
     `;

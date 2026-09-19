@@ -336,11 +336,17 @@
   </p>
 
   <h2 style="margin-top:24px;">Our team</h2>
-  <div class="row-list" style="margin-top:10px;">
-    <div class="row-item"><div class="row-main"><h3>Founder &amp; CEO</h3><p class="muted">Vision, product and strategy</p></div></div>
-    <div class="row-item"><div class="row-main"><h3>Co-Founder</h3><p class="muted">Operations and growth</p></div></div>
-    <div class="row-item"><div class="row-main"><h3>Co-Founder</h3><p class="muted">Partnerships and community</p></div></div>
+  <div id="teamGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:20px; margin-top:14px;"></div>
+
+  <div id="teamAddSection" style="display:none; margin-top:22px; padding-top:18px; border-top:1px solid var(--border);">
+    <h3 style="font-size:14px; margin-bottom:10px;">Add a team member</h3>
+    <input id="teamPhoto" type="file" accept="image/*" class="field">
+    <input id="teamName" placeholder="Full name" class="field">
+    <input id="teamRole" placeholder="Role (e.g. Founder & CEO)" class="field">
+    <button onclick="submitTeamMember()" class="btn btn-primary btn-sm">Add to team</button>
+    <p id="teamError" class="error-text"></p>
   </div>
+  <p id="teamAddPrompt" class="muted" style="font-size:12px; margin-top:16px; cursor:pointer;" onclick="showTeamAddForm()">+ Sign in to add a team member</p>
 
   <h2 style="margin-top:24px;">Get in touch</h2>
   <p class="muted">
@@ -420,7 +426,7 @@
   <textarea id="promoDesc" placeholder="What are you promoting?" class="field" style="min-height:80px;"></textarea>
   <input id="promoContact" placeholder="Contact info (WhatsApp, email, etc.)" class="field">
   <select id="promoPlan" class="field">
-    <option value="30">1 week, 15 min slots, 5x/day - R30</option>
+    <option value="10">1 week, 15 min slots, 5x/day - R10</option>
   </select>
   <p class="helper-text">Your ad rotates into the Sponsored section 5 times a day, 15 minutes per slot, for 7 days.</p>
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px; margin:14px 0; color:var(--text-dim); font-size:13px;">
@@ -590,6 +596,7 @@ function showView(name) {
   if (name === 'cart') renderCart();
   if (name === 'events') renderEvents();
   if (name === 'opportunities') renderOpportunities();
+  if (name === 'about') renderTeam();
 }
 
 async function renderListings() {
@@ -887,6 +894,76 @@ function resizeImageFile(file, maxDimension = 1200, quality = 0.82) {
     img.onerror = () => resolve(file);
     img.src = objectUrl;
   });
+}
+
+async function renderTeam() {
+  const grid = document.getElementById('teamGrid');
+  grid.innerHTML = 'Loading...';
+
+  const { data, error } = await supabaseClient
+    .from('team_members')
+    .select('*')
+    .order('sort_order', { ascending: true });
+
+  if (error || !data || data.length === 0) {
+    grid.innerHTML = '<p class="muted">Team photos coming soon.</p>';
+  } else {
+    grid.innerHTML = data.map(m => {
+      const photo = m.photo_url
+        ? `<img src="${m.photo_url}" loading="lazy" style="width:88px; height:88px; border-radius:50%; object-fit:cover; display:block;">`
+        : `<div style="width:88px; height:88px; border-radius:50%; background:var(--orange-dim); color:var(--orange); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:700;">${m.name.charAt(0)}</div>`;
+      return `
+        <div style="text-align:center;">
+          ${photo}
+          <h3 style="margin-top:10px; font-size:14px;">${m.name}</h3>
+          <p class="muted" style="font-size:12px; margin-top:2px;">${m.role}</p>
+        </div>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('teamAddPrompt').style.display = 'none';
+  document.getElementById('teamAddSection').style.display = 'none';
+
+  if (currentUser) {
+    const { data: profile } = await supabaseClient.from('users').select('is_admin').eq('id', currentUser.id).single();
+    if (profile && profile.is_admin) {
+      document.getElementById('teamAddSection').style.display = 'block';
+    }
+  }
+}
+
+function showTeamAddForm() {
+  if (!currentUser) { showView('auth'); return; }
+}
+
+async function submitTeamMember() {
+  if (!currentUser) { showView('auth'); return; }
+  const name = document.getElementById('teamName').value.trim();
+  const role = document.getElementById('teamRole').value.trim();
+  const photoFile = document.getElementById('teamPhoto').files[0];
+  const err = document.getElementById('teamError');
+
+  if (!name || !role) { err.textContent = 'Fill in a name and role.'; return; }
+
+  let photo_url = null;
+  if (photoFile) {
+    const resized = await resizeImageFile(photoFile, 500, 0.85);
+    const path = `${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+    const { error: uploadError } = await supabaseClient.storage.from('team-photos').upload(path, resized);
+    if (uploadError) { err.textContent = 'Could not upload photo. Try again.'; return; }
+    const { data: urlData } = supabaseClient.storage.from('team-photos').getPublicUrl(path);
+    photo_url = urlData.publicUrl;
+  }
+
+  const { error } = await supabaseClient.from('team_members').insert({ name, role, photo_url });
+  if (error) { err.textContent = 'Could not save. Try again.'; return; }
+
+  err.textContent = '';
+  document.getElementById('teamName').value = '';
+  document.getElementById('teamRole').value = '';
+  document.getElementById('teamPhoto').value = '';
+  renderTeam();
 }
 
 async function uploadListingPhotos(listingId, files) {

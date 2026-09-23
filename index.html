@@ -169,6 +169,15 @@
     background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 45%, rgba(0,0,0,0) 70%);
   }
   .feed-slide .feed-info { position: relative; z-index: 2; padding: 24px 90px 32px 20px; color: #fff; width: 100%; }
+  .feed-photo-scroll {
+    position: absolute; inset: 0; display: flex; overflow-x: auto;
+    scroll-snap-type: x mandatory; scrollbar-width: none;
+  }
+  .feed-photo-scroll::-webkit-scrollbar { display: none; }
+  .feed-photo-scroll img { flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; }
+  .feed-dots { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 3; }
+  .feed-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.35); transition: background 0.15s; }
+  .feed-dot.active { background: #fff; }
   .feed-actions { position: absolute; right: 12px; bottom: 100px; z-index: 3; display: flex; flex-direction: column; gap: 18px; align-items: center; }
   .feed-action-btn {
     background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
@@ -1533,10 +1542,17 @@ async function renderFeed() {
 
   const feedHeight = container.style.height;
   container.innerHTML = data.map(item => {
-    const photoUrl = item.listing_photos && item.listing_photos.length > 0 ? item.listing_photos[0].storage_url : null;
-    const bg = photoUrl
-      ? `<img class="feed-bg" src="${photoUrl}">`
-      : `<div class="feed-fallback">📦</div>`;
+    const photos = item.listing_photos || [];
+    let bg;
+    if (photos.length > 1) {
+      const slides = photos.map(p => `<img src="${p.storage_url}">`).join('');
+      const dots = photos.map((_, i) => `<span class="feed-dot${i === 0 ? ' active' : ''}"></span>`).join('');
+      bg = `<div class="feed-photo-scroll" data-photo-scroll>${slides}</div><div class="feed-dots">${dots}</div>`;
+    } else if (photos.length === 1) {
+      bg = `<img class="feed-bg" src="${photos[0].storage_url}">`;
+    } else {
+      bg = `<div class="feed-fallback">📦</div>`;
+    }
     const priceLine = item.compare_at_price && item.compare_at_price > item.price
       ? `<span class="mono" style="font-size:22px; font-weight:700;">R${item.price}</span> <span style="opacity:0.6; text-decoration:line-through; font-size:14px; margin-left:6px;">R${item.compare_at_price}</span>`
       : `<span class="mono" style="font-size:22px; font-weight:700;">R${item.price}</span>`;
@@ -1561,6 +1577,16 @@ async function renderFeed() {
       </div>
     `;
   }).join('');
+
+  document.querySelectorAll('[data-photo-scroll]').forEach(strip => {
+    const slide = strip.closest('.feed-slide');
+    const dots = slide.querySelectorAll('.feed-dot');
+    if (dots.length === 0) return;
+    strip.addEventListener('scroll', () => {
+      const index = Math.round(strip.scrollLeft / strip.clientWidth);
+      dots.forEach((d, i) => d.classList.toggle('active', i === index));
+    });
+  });
 }
 
 function onCampusChange() {

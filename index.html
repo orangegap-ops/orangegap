@@ -231,7 +231,6 @@
     <button class="nav-link" data-view="events" onclick="showView('events')">Events</button>
     <button class="nav-link" data-view="opportunities" onclick="showView('opportunities')">Opportunities</button>
     <button class="nav-link" data-view="profile" onclick="showView('profile')">Profile</button>
-    <button class="nav-link" data-view="moderation" onclick="showView('moderation')">Moderation</button>
   </div>
 </div>
 
@@ -618,6 +617,7 @@ async function renderListings() {
     .from('listings')
     .select('*, listing_photos(storage_url)')
     .eq('status', 'approved')
+    .eq('sold', false)
     .order('created_at', { ascending: false });
 
   if (error) { grid.innerHTML = 'Could not load listings.'; return; }
@@ -840,13 +840,23 @@ async function renderMessages() {
 
 async function reportListing(listingId) {
   if (!currentUser) { showView('auth'); return; }
-  await supabaseClient.from('reports').insert({ listing_id: listingId, reporter_id: currentUser.id, reason: 'Reported by user' });
+  const reason = window.prompt('Please describe the issue with this listing:');
+  if (!reason || !reason.trim()) { alert('A reason is required to submit a report.'); return; }
+  await supabaseClient.from('reports').insert({ listing_id: listingId, reporter_id: currentUser.id, reason: reason.trim() });
   alert('Reported. Our team will review this within 24 hours.');
 }
 
 async function renderModQueue() {
-  const { data } = await supabaseClient.from('reports').select('*, listings(title)').order('created_at', { ascending: false });
   const el = document.getElementById('modQueue');
+  if (!currentUser) { el.innerHTML = 'Sign in required.'; return; }
+
+  const { data: profile } = await supabaseClient.from('users').select('is_admin').eq('id', currentUser.id).single();
+  if (!profile || !profile.is_admin) {
+    el.innerHTML = 'This page is only available to OrangeGap admins.';
+    return;
+  }
+
+  const { data } = await supabaseClient.from('reports').select('*, listings(title)').order('created_at', { ascending: false });
   el.innerHTML = (data || []).length
     ? data.map(r => `<div style="border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:8px;"><b>${r.listings ? r.listings.title : r.listing_id}</b><br><span style="font-size:12px;">${r.reason} - ${new Date(r.created_at).toLocaleString()}</span></div>`).join('')
     : 'No reports yet.';
@@ -1533,6 +1543,7 @@ async function renderFeed() {
     .from('listings')
     .select('*, listing_photos(storage_url)')
     .eq('status', 'approved')
+    .eq('sold', false)
     .order('created_at', { ascending: false });
 
   if (error || !data || data.length === 0) {

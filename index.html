@@ -178,6 +178,13 @@
   .feed-dots { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 3; }
   .feed-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.35); transition: background 0.15s; }
   .feed-dot.active { background: #fff; }
+  .feed-nav-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+    background: rgba(0,0,0,0.35); border: none; color: #fff; width: 40px; height: 40px;
+    border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .feed-nav-prev { left: 12px; }
+  .feed-nav-next { right: 12px; }
   .feed-actions { position: absolute; right: 12px; bottom: 100px; z-index: 3; display: flex; flex-direction: column; gap: 18px; align-items: center; }
   .feed-action-btn {
     background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
@@ -1558,7 +1565,7 @@ async function renderFeed() {
     if (photos.length > 1) {
       const slides = photos.map(p => `<img src="${p.storage_url}">`).join('');
       const dots = photos.map((_, i) => `<span class="feed-dot${i === 0 ? ' active' : ''}"></span>`).join('');
-      bg = `<div class="feed-photo-scroll" data-photo-scroll>${slides}</div><div class="feed-dots">${dots}</div>`;
+      bg = `<div class="feed-photo-scroll" data-photo-scroll>${slides}</div><div class="feed-dots">${dots}</div><button class="feed-nav-arrow feed-nav-prev" onclick="scrollFeedPhoto(this,-1)">&#8249;</button><button class="feed-nav-arrow feed-nav-next" onclick="scrollFeedPhoto(this,1)">&#8250;</button>`;
     } else if (photos.length === 1) {
       bg = `<img class="feed-bg" src="${photos[0].storage_url}">`;
     } else {
@@ -1598,6 +1605,12 @@ async function renderFeed() {
       dots.forEach((d, i) => d.classList.toggle('active', i === index));
     });
   });
+}
+
+function scrollFeedPhoto(btn, direction) {
+  const strip = btn.closest('.feed-slide').querySelector('[data-photo-scroll]');
+  if (!strip) return;
+  strip.scrollBy({ left: strip.clientWidth * direction, behavior: 'smooth' });
 }
 
 function onCampusChange() {

@@ -637,6 +637,17 @@ const supabaseClient = supabase.createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1YWR5ZGN4cXRyamFtYWpmbnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NjQzNzcsImV4cCI6MjEwMjU0MDM3N30.Obg6UdcMIHuvg6vzP94ex5aAdrRJQqJu-Fqt5bXCu4Q'
 );
 
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function safeUrl(url) {
+  try {
+    const u = new URL(url);
+    return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : '';
+  } catch (e) { return ''; }
+}
+
 let currentUser = null;
 let isSignUpMode = true;
 const CATEGORY_TYPICAL_PRICE = { "Books": 250, "Appliances": 700, "Electronics": 800, "Essentials": 150 };
@@ -725,7 +736,7 @@ async function renderListings() {
     card.className = 'product-card';
     const photoUrl = item.listing_photos && item.listing_photos.length > 0 ? item.listing_photos[0].storage_url : null;
     const thumb = photoUrl
-      ? `<div class="product-thumb"><img src="${photoUrl}" alt="${item.title}" loading="lazy"></div>`
+      ? `<div class="product-thumb"><img src="${photoUrl}" alt="${esc(item.title)}" loading="lazy"></div>`
       : `<div class="product-thumb empty">📦</div>`;
     const priceRow = item.compare_at_price && item.compare_at_price > item.price
       ? `<p class="product-price">R${item.price}<span class="was">List: R${item.compare_at_price}</span></p>`
@@ -733,10 +744,10 @@ async function renderListings() {
     card.innerHTML = `
       ${thumb}
       <div class="product-body">
-        <h3 class="product-title">${item.title}</h3>
+        <h3 class="product-title">${esc(item.title)}</h3>
         ${priceRow}
-        <div style="margin-top:8px;"><span class="badge">${item.category}</span></div>
-        <p class="muted" style="font-size:11px; margin-top:6px;">${item.campus}</p>
+        <div style="margin-top:8px;"><span class="badge">${esc(item.category)}</span></div>
+        <p class="muted" style="font-size:11px; margin-top:6px;">${esc(item.campus)}</p>
       </div>
     `;
     card.onclick = () => openFeedAt(item.id);
@@ -750,7 +761,7 @@ async function openListing(id) {
   if (!item) return;
   const photos = item.listing_photos || [];
   const photoStrip = photos.length > 0
-    ? `<div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:16px;">${photos.map(p => `<div class="photo-frame" style="width:160px; height:160px; flex-shrink:0; padding:8px;"><img src="${p.storage_url}" alt="${item.title}" loading="lazy"></div>`).join('')}</div>`
+    ? `<div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:16px;">${photos.map(p => `<div class="photo-frame" style="width:160px; height:160px; flex-shrink:0; padding:8px;"><img src="${p.storage_url}" alt="${esc(item.title)}" loading="lazy"></div>`).join('')}</div>`
     : `<div style="height:180px; background:var(--surface-raised); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--orange); font-size:32px; margin-bottom:16px;">📦</div>`;
   const buyButton = item.sold
     ? `<span class="badge" style="background:var(--surface-raised); padding:10px 16px; font-size:14px;">Sold</span>`
@@ -761,10 +772,10 @@ async function openListing(id) {
     : `<p class="mono" style="color:var(--orange); font-size:22px; font-weight:700; margin:0;">R${item.price}</p>`;
   document.getElementById('listingDetailContent').innerHTML = `
     ${photoStrip}
-    <h1 style="font-size:20px;">${item.title}</h1>
+    <h1 style="font-size:20px;">${esc(item.title)}</h1>
     ${priceBlock}
-    <p class="muted" style="margin-top:10px;">${item.description}</p>
-    <p class="muted" style="font-size:13px;">${item.campus}</p>
+    <p class="muted" style="margin-top:10px;">${esc(item.description)}</p>
+    <p class="muted" style="font-size:13px;">${esc(item.campus)}</p>
     <div class="btn-row" style="margin-top:14px;">
       ${buyButton}
       <button onclick="messageSeller('${item.seller_id}','${item.id}')" class="btn btn-outline">Message seller</button>
@@ -929,7 +940,7 @@ async function renderMessages() {
     .or(`sender_id.eq.${currentUser.id},recipient_id.eq.${currentUser.id}`)
     .order('created_at');
   const thread = document.getElementById('messagesThread');
-  thread.innerHTML = (data || []).map(m => `<p>${m.sender_id === currentUser.id ? 'You' : 'Them'}: ${m.body}</p>`).join('') || 'No conversations yet.';
+  thread.innerHTML = (data || []).map(m => `<p>${m.sender_id === currentUser.id ? 'You' : 'Them'}: ${esc(m.body)}</p>`).join('') || 'No conversations yet.';
 }
 
 async function reportListing(listingId) {
@@ -952,7 +963,7 @@ async function renderModQueue() {
 
   const { data } = await supabaseClient.from('reports').select('*, listings(title)').order('created_at', { ascending: false });
   el.innerHTML = (data || []).length
-    ? data.map(r => `<div style="border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:8px;"><b>${r.listings ? r.listings.title : r.listing_id}</b><br><span style="font-size:12px;">${r.reason} - ${new Date(r.created_at).toLocaleString()}</span></div>`).join('')
+    ? data.map(r => `<div style="border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:8px;"><b>${esc(r.listings ? r.listings.title : r.listing_id)}</b><br><span style="font-size:12px;">${esc(r.reason)} - ${new Date(r.created_at).toLocaleString()}</span></div>`).join('')
     : 'No reports yet.';
 }
 
@@ -1023,13 +1034,13 @@ async function renderTeam() {
   } else {
     grid.innerHTML = data.map(m => {
       const photo = m.photo_url
-        ? `<img src="${m.photo_url}" alt="${m.name}, ${m.role}" loading="lazy" style="width:88px; height:88px; border-radius:50%; object-fit:cover; display:block;">`
-        : `<div style="width:88px; height:88px; border-radius:50%; background:var(--orange-dim); color:var(--orange); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:700;">${m.name.charAt(0)}</div>`;
+        ? `<img src="${m.photo_url}" alt="${esc(m.name)}, ${esc(m.role)}" loading="lazy" style="width:88px; height:88px; border-radius:50%; object-fit:cover; display:block;">`
+        : `<div style="width:88px; height:88px; border-radius:50%; background:var(--orange-dim); color:var(--orange); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:700;">${esc(m.name.charAt(0))}</div>`;
       return `
         <div style="text-align:center;">
           ${photo}
-          <h3 style="margin-top:10px; font-size:14px;">${m.name}</h3>
-          <p class="muted" style="font-size:12px; margin-top:2px;">${m.role}</p>
+          <h3 style="margin-top:10px; font-size:14px;">${esc(m.name)}</h3>
+          <p class="muted" style="font-size:12px; margin-top:2px;">${esc(m.role)}</p>
         </div>
       `;
     }).join('');
@@ -1157,7 +1168,7 @@ async function renderProfile() {
     document.getElementById('profileInfo').innerHTML = '<p class="muted">Sign in to view your profile.</p>';
     return;
   }
-  document.getElementById('profileInfo').innerHTML = `<p>${currentUser.email}</p><span class="badge success">Email verified</span>`;
+  document.getElementById('profileInfo').innerHTML = `<p>${esc(currentUser.email)}</p><span class="badge success">Email verified</span>`;
 
   const { data: profile } = await supabaseClient.from('users').select('*').eq('id', currentUser.id).single();
   if (profile) {
@@ -1169,7 +1180,7 @@ async function renderProfile() {
 
   const { data } = await supabaseClient.from('listings').select('*').eq('seller_id', currentUser.id);
   document.getElementById('myListings').innerHTML = (data || []).map(l =>
-    `<p>${l.title} - you'll receive R${l.seller_payout ?? l.price} <span class="badge orange">${l.status}</span></p>`
+    `<p>${esc(l.title)} - you'll receive R${l.seller_payout ?? l.price} <span class="badge orange">${esc(l.status)}</span></p>`
   ).join('') || 'You haven\'t listed anything yet.';
 }
 
@@ -1247,13 +1258,13 @@ async function renderCart() {
     total += Number(item.price);
     const photoUrl = item.listing_photos && item.listing_photos.length > 0 ? item.listing_photos[0].storage_url : null;
     const thumb = photoUrl
-      ? `<div class="photo-frame" style="width:56px; height:56px; flex-shrink:0; padding:5px;"><img src="${photoUrl}" alt="${item.title}" loading="lazy"></div>`
+      ? `<div class="photo-frame" style="width:56px; height:56px; flex-shrink:0; padding:5px;"><img src="${photoUrl}" alt="${esc(item.title)}" loading="lazy"></div>`
       : `<div style="width:56px; height:56px; flex-shrink:0; border-radius:8px; background:var(--surface-raised); display:flex; align-items:center; justify-content:center;">📦</div>`;
     return `
       <div class="cart-row">
         ${thumb}
         <div style="flex:1;">
-          <p class="cart-title">${item.title}</p>
+          <p class="cart-title">${esc(item.title)}</p>
           <p class="mono cart-price">R${item.price}</p>
         </div>
         <button onclick="removeFromCart('${item.id}')" class="btn btn-ghost btn-sm">Remove</button>
@@ -1293,9 +1304,9 @@ async function renderDiscover() {
     <div class="row-item">
       <div class="row-main">
         <div class="row-tags"><span class="badge orange">Promoted</span></div>
-        <h3>${p.business_name}</h3>
-        <p class="muted">${p.description}</p>
-        <p class="muted" style="font-size:12px; margin-top:6px;">${p.campus}${p.contact_info ? ' &middot; ' + p.contact_info : ''}</p>
+        <h3>${esc(p.business_name)}</h3>
+        <p class="muted">${esc(p.description)}</p>
+        <p class="muted" style="font-size:12px; margin-top:6px;">${esc(p.campus)}${p.contact_info ? ' &middot; ' + esc(p.contact_info) : ''}</p>
       </div>
     </div>
   `).join('') || '<p class="muted" style="padding:16px 0;">No promotions live yet - be the first.</p>';
@@ -1379,9 +1390,9 @@ async function renderEvents() {
       <div class="row-item">
         <div class="row-date"><div class="mono" style="font-size:15px; font-weight:700; color:var(--orange);">${day}</div>${month.toUpperCase()}<br>${time}</div>
         <div class="row-main">
-          <h3>${ev.title}</h3>
-          <p class="muted">${ev.description}</p>
-          <p class="muted" style="font-size:12px; margin-top:6px;">${ev.location || ev.campus}</p>
+          <h3>${esc(ev.title)}</h3>
+          <p class="muted">${esc(ev.description)}</p>
+          <p class="muted" style="font-size:12px; margin-top:6px;">${esc(ev.location || ev.campus)}</p>
         </div>
       </div>
     `;
@@ -1430,12 +1441,12 @@ async function renderOpportunities() {
     <div class="row-item">
       <div class="row-main">
         <div class="row-tags">
-          <span class="badge orange">${o.type}</span>
-          <span class="badge">${o.faculty}</span>
+          <span class="badge orange">${esc(o.type)}</span>
+          <span class="badge">${esc(o.faculty)}</span>
         </div>
-        <h3>${o.title}</h3>
-        <p class="muted">${o.description}</p>
-        ${o.link ? `<p style="font-size:12px; margin-top:6px;"><a href="${o.link}" target="_blank">Apply / learn more &rarr;</a></p>` : ''}
+        <h3>${esc(o.title)}</h3>
+        <p class="muted">${esc(o.description)}</p>
+        ${safeUrl(o.link) ? `<p style="font-size:12px; margin-top:6px;"><a href="${esc(safeUrl(o.link))}" target="_blank" rel="noopener noreferrer">Apply / learn more &rarr;</a></p>` : ''}
       </div>
     </div>
   `).join('') || '<p class="muted" style="padding:16px 0;">No opportunities match yet - check back soon or post one.</p>';
@@ -1452,6 +1463,7 @@ async function submitOpportunity() {
   const err = document.getElementById('oppError');
 
   if (!title || !description) { err.textContent = 'Fill in a title and description.'; return; }
+  if (link && !safeUrl(link)) { err.textContent = 'The link must start with http:// or https://'; return; }
 
   const { error } = await supabaseClient.from('opportunities').insert({
     poster_id: currentUser.id, title, type, faculty, description, link, campus, status: 'pending_review'
@@ -1603,8 +1615,8 @@ function renderAdsInto(elementId) {
   el.innerHTML = slice.map(p => `
     <div class="ad-slot">
       <span class="badge orange">Ad</span>
-      <h3>${p.business_name}</h3>
-      <p>${p.description}</p>
+      <h3>${esc(p.business_name)}</h3>
+      <p>${esc(p.description)}</p>
     </div>
   `).join('');
 }
@@ -1654,11 +1666,11 @@ async function renderFeed() {
     const photos = item.listing_photos || [];
     let bg;
     if (photos.length > 1) {
-      const slides = photos.map(p => `<div class="feed-photo-item"><img class="blur-bg" src="${p.storage_url}" alt=""><img class="main-img" src="${p.storage_url}" alt="${item.title}"></div>`).join('');
+      const slides = photos.map(p => `<div class="feed-photo-item"><img class="blur-bg" src="${p.storage_url}" alt=""><img class="main-img" src="${p.storage_url}" alt="${esc(item.title)}"></div>`).join('');
       const dots = photos.map((_, i) => `<span class="feed-dot${i === 0 ? ' active' : ''}"></span>`).join('');
       bg = `<div class="feed-photo-scroll" data-photo-scroll>${slides}</div><div class="feed-dots">${dots}</div><div class="feed-nav-row"><button class="feed-nav-arrow" onclick="scrollFeedPhoto(this,-1)">&larr;</button><button class="feed-nav-arrow" onclick="scrollFeedPhoto(this,1)">&rarr;</button></div>`;
     } else if (photos.length === 1) {
-      bg = `<img class="blur-bg" src="${photos[0].storage_url}" alt="" style="position:absolute; top:-5%; left:-5%; width:110%; height:110%; object-fit:cover; filter:blur(28px) brightness(0.55);"><img class="main-img" src="${photos[0].storage_url}" alt="${item.title}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain;">`;
+      bg = `<img class="blur-bg" src="${photos[0].storage_url}" alt="" style="position:absolute; top:-5%; left:-5%; width:110%; height:110%; object-fit:cover; filter:blur(28px) brightness(0.55);"><img class="main-img" src="${photos[0].storage_url}" alt="${esc(item.title)}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain;">`;
     } else {
       bg = `<div class="feed-fallback">📦</div>`;
     }
@@ -1678,10 +1690,10 @@ async function renderFeed() {
           <button class="feed-action-btn" onclick="reportListing('${item.id}')" title="Report">⚠️</button>
         </div>
         <div class="feed-info">
-          <span class="badge orange" style="margin-bottom:8px;">${item.category}</span>${soldTag}
-          <h2 style="font-size:19px; margin:8px 0 6px;">${item.title}</h2>
+          <span class="badge orange" style="margin-bottom:8px;">${esc(item.category)}</span>${soldTag}
+          <h2 style="font-size:19px; margin:8px 0 6px;">${esc(item.title)}</h2>
           <p style="margin:0 0 6px;">${priceLine}</p>
-          <p style="font-size:13px; opacity:0.85; margin:0;">${item.campus}</p>
+          <p style="font-size:13px; opacity:0.85; margin:0;">${esc(item.campus)}</p>
         </div>
       </div>
     `;

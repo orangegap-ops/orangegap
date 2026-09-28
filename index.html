@@ -15,6 +15,11 @@
 <meta name="twitter:title" content="OrangeGap - Bridging The Gaps">
 <meta name="twitter:description" content="A trusted student marketplace and opportunities platform, built for South African campuses.">
 <meta name="robots" content="index, follow">
+<meta property="og:image" content="https://orangegap.vercel.app/og-image.png">
+<meta name="twitter:image" content="https://orangegap.vercel.app/og-image.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Organization","name":"OrangeGap","url":"https://orangegap.vercel.app/","slogan":"Bridging The Gaps","description":"Student marketplace and opportunities platform for North-West University, Potchefstroom.","areaServed":"Potchefstroom, South Africa"}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -174,7 +179,14 @@
     scroll-snap-type: x mandatory; scrollbar-width: none;
   }
   .feed-photo-scroll::-webkit-scrollbar { display: none; }
-  .feed-photo-scroll img { flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; }
+  .feed-photo-item { position: relative; flex: 0 0 100%; width: 100%; height: 100%; scroll-snap-align: start; overflow: hidden; }
+  .feed-photo-item .blur-bg {
+    position: absolute; top: -5%; left: -5%; width: 110%; height: 110%;
+    object-fit: cover; filter: blur(28px) brightness(0.55);
+  }
+  .feed-photo-item .main-img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+  }
   .feed-dots { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 3; }
   .feed-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.35); transition: background 0.15s; }
   .feed-dot.active { background: #fff; }
@@ -204,6 +216,20 @@
   .cart-row .cart-title { margin: 0; font-size: 14px; }
   .cart-row .cart-price { margin: 4px 0 0; font-size: 14px; font-weight: 700; color: var(--orange); }
 
+  .faq details { border-bottom: 1px solid var(--border); padding: 14px 0; }
+  .faq summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+  .faq details p { margin: 8px 0 0; color: var(--text-dim); font-size: 14px; max-width: 620px; }
+  .site-footer { max-width: 1400px; margin: 0 auto; padding: 24px 20px 90px; display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: var(--text-dim); border-top: 1px solid var(--border); }
+  .site-footer a { color: var(--text-dim); cursor: pointer; text-decoration: underline; }
+  .mobile-cta { display: none; }
+  @media (max-width: 780px) {
+    .mobile-cta {
+      display: flex; gap: 8px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+      padding: 10px 14px; background: var(--ink); border-top: 1px solid var(--border);
+    }
+    .mobile-cta .btn { flex: 1; }
+    body.feed-open .mobile-cta { display: none; }
+  }
   @media (min-width: 820px) { .ads-sidebar { display: block !important; } }
   @media (max-width: 780px) {
     .hero { grid-template-columns: 1fr; }
@@ -322,7 +348,7 @@
 </div>
 
 <div id="view-sell" class="view form-narrow">
-  <div class="page-head"><h1>Sell an item</h1></div>
+  <div class="page-head"><h1>Sell an item</h1><p>We review every listing and aim to have it live within 24 hours.</p></div>
   <label class="field-label">Photos</label>
   <input id="sellPhotos" type="file" accept="image/*" multiple class="field">
   <div id="sellPhotoPreview" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;"></div>
@@ -559,9 +585,50 @@
   </form>
 </div>
 
+<div id="view-faq" class="view form-narrow">
+  <div class="page-head"><h1>Questions and answers</h1></div>
+  <div class="faq">
+    <details><summary>Is OrangeGap free to use?</summary><p>Yes. Signing up, browsing, posting an event and posting an opportunity are free. Listing an item is free, and your Profile shows what you will receive for each sale. Advertising in the Sponsored section costs R10 a week.</p></details>
+    <details><summary>How does payment work?</summary><p>Buyers pay through PayFast, so card details never touch OrangeGap. The money reaches OrangeGap first, and the seller is paid out once the order is sorted.</p></details>
+    <details><summary>How long until my listing goes live?</summary><p>We review every listing before it appears. We aim to review new listings within 24 hours.</p></details>
+    <details><summary>Who can use it?</summary><p>OrangeGap is currently built for students at NWU Potchefstroom. Anyone can sign up with an email address, and you confirm your email once when you register.</p></details>
+    <details><summary>What if something is wrong with a listing?</summary><p>Use the Report button on the listing and tell us what is wrong. The OrangeGap team reviews every report.</p></details>
+  </div>
+</div>
+
+<div id="view-privacy" class="view form-narrow">
+  <div class="page-head"><h1>Privacy policy</h1><p>Last updated September 2026.</p></div>
+  <h2 style="margin-top:20px;">What we collect</h2>
+  <p class="muted">Your email address, university and campus, your delivery address and phone number if you buy something, and the listings, photos, events and messages you post.</p>
+  <h2 style="margin-top:20px;">Why we collect it</h2>
+  <p class="muted">To run your account, show your listings, deliver orders and keep the platform safe. We do not sell your personal information.</p>
+  <h2 style="margin-top:20px;">Payments</h2>
+  <p class="muted">Card and bank details are entered on PayFast's own page. OrangeGap never sees or stores them.</p>
+  <h2 style="margin-top:20px;">Where it is stored</h2>
+  <p class="muted">Your data is stored with Supabase. Passwords are hashed, and access rules stop users reading each other's private data.</p>
+  <h2 style="margin-top:20px;">Your rights under POPIA</h2>
+  <p class="muted">You can ask to see, correct or delete your personal information at any time. Contact the OrangeGap team through the details on our social pages.</p>
+</div>
+
+<div id="view-thanks" class="view form-narrow">
+  <div class="page-head"><h1 id="thanksTitle">Thank you</h1><p id="thanksText"></p></div>
+  <div class="btn-row"><button onclick="showView('marketplace')" class="btn btn-primary">Back to marketplace</button><button onclick="showView('profile')" class="btn btn-outline">Go to profile</button></div>
+</div>
+
 <div id="view-moderation" class="view">
   <div class="page-head"><h1>Moderation queue</h1></div>
   <div id="modQueue" class="muted">No reports yet.</div>
+</div>
+
+<div class="site-footer">
+  <span>OrangeGap, Potchefstroom</span>
+  <a onclick="showView('faq')">Questions</a>
+  <a onclick="showView('privacy')">Privacy policy</a>
+  <a onclick="showView('about')">About</a>
+</div>
+<div class="mobile-cta">
+  <button onclick="showView('marketplace')" class="btn btn-outline">Browse</button>
+  <button onclick="showView('sell')" class="btn btn-primary">Sell something</button>
 </div>
 
 <script>
@@ -602,7 +669,24 @@ function toggleAuthMode() {
   document.getElementById('authCampus').style.display = isSignUpMode ? 'block' : 'none';
 }
 
+const PAGE_TITLES = {
+  home: 'OrangeGap - Student marketplace at NWU Potchefstroom',
+  about: 'About OrangeGap - Who runs it and why',
+  marketplace: 'Marketplace - Buy and sell on campus | OrangeGap',
+  discover: 'Discover - Local student businesses | OrangeGap',
+  events: 'Campus events at NWU | OrangeGap',
+  opportunities: 'Jobs, internships and bursaries | OrangeGap',
+  sell: 'Sell an item | OrangeGap',
+  cart: 'Your cart | OrangeGap',
+  profile: 'Your profile | OrangeGap',
+  faq: 'Questions and answers | OrangeGap',
+  privacy: 'Privacy policy | OrangeGap',
+  thanks: 'Thank you | OrangeGap'
+};
+
 function showView(name) {
+  document.title = PAGE_TITLES[name] || 'OrangeGap - Bridging The Gaps';
+  document.body.classList.toggle('feed-open', name === 'feed');
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.view === name));
@@ -641,7 +725,7 @@ async function renderListings() {
     card.className = 'product-card';
     const photoUrl = item.listing_photos && item.listing_photos.length > 0 ? item.listing_photos[0].storage_url : null;
     const thumb = photoUrl
-      ? `<div class="product-thumb"><img src="${photoUrl}" loading="lazy"></div>`
+      ? `<div class="product-thumb"><img src="${photoUrl}" alt="${item.title}" loading="lazy"></div>`
       : `<div class="product-thumb empty">📦</div>`;
     const priceRow = item.compare_at_price && item.compare_at_price > item.price
       ? `<p class="product-price">R${item.price}<span class="was">List: R${item.compare_at_price}</span></p>`
@@ -666,7 +750,7 @@ async function openListing(id) {
   if (!item) return;
   const photos = item.listing_photos || [];
   const photoStrip = photos.length > 0
-    ? `<div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:16px;">${photos.map(p => `<div class="photo-frame" style="width:160px; height:160px; flex-shrink:0; padding:8px;"><img src="${p.storage_url}" loading="lazy"></div>`).join('')}</div>`
+    ? `<div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:16px;">${photos.map(p => `<div class="photo-frame" style="width:160px; height:160px; flex-shrink:0; padding:8px;"><img src="${p.storage_url}" alt="${item.title}" loading="lazy"></div>`).join('')}</div>`
     : `<div style="height:180px; background:var(--surface-raised); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--orange); font-size:32px; margin-bottom:16px;">📦</div>`;
   const buyButton = item.sold
     ? `<span class="badge" style="background:var(--surface-raised); padding:10px 16px; font-size:14px;">Sold</span>`
@@ -939,7 +1023,7 @@ async function renderTeam() {
   } else {
     grid.innerHTML = data.map(m => {
       const photo = m.photo_url
-        ? `<img src="${m.photo_url}" loading="lazy" style="width:88px; height:88px; border-radius:50%; object-fit:cover; display:block;">`
+        ? `<img src="${m.photo_url}" alt="${m.name}, ${m.role}" loading="lazy" style="width:88px; height:88px; border-radius:50%; object-fit:cover; display:block;">`
         : `<div style="width:88px; height:88px; border-radius:50%; background:var(--orange-dim); color:var(--orange); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:700;">${m.name.charAt(0)}</div>`;
       return `
         <div style="text-align:center;">
@@ -1163,7 +1247,7 @@ async function renderCart() {
     total += Number(item.price);
     const photoUrl = item.listing_photos && item.listing_photos.length > 0 ? item.listing_photos[0].storage_url : null;
     const thumb = photoUrl
-      ? `<div class="photo-frame" style="width:56px; height:56px; flex-shrink:0; padding:5px;"><img src="${photoUrl}" loading="lazy"></div>`
+      ? `<div class="photo-frame" style="width:56px; height:56px; flex-shrink:0; padding:5px;"><img src="${photoUrl}" alt="${item.title}" loading="lazy"></div>`
       : `<div style="width:56px; height:56px; flex-shrink:0; border-radius:8px; background:var(--surface-raised); display:flex; align-items:center; justify-content:center;">📦</div>`;
     return `
       <div class="cart-row">
@@ -1443,18 +1527,22 @@ async function submitAuth() {
 
 function checkPayFastReturn() {
   const params = new URLSearchParams(window.location.search);
-  if (params.get('promo_paid')) {
-    alert('Payment received! Your promotion is now pending final review before it goes live.');
-  } else if (params.get('promo_cancelled')) {
-    alert('Payment was cancelled. Your promotion request was saved but won\'t go live until paid.');
-  } else if (params.get('order_paid')) {
-    alert('Payment received! The seller has been notified and your order is confirmed.');
-  } else if (params.get('order_cancelled')) {
-    alert('Payment was cancelled. The item is still available if you want to try again.');
-  } else if (params.get('cart_paid')) {
-    alert('Payment received! Your cart order is confirmed and sellers have been notified.');
-  } else if (params.get('cart_cancelled')) {
-    alert('Payment was cancelled. Your items were not removed from availability.');
+  const messages = {
+    promo_paid: ['Payment received', 'Your promotion is now pending a final review before it goes live.'],
+    promo_cancelled: ['Payment cancelled', 'Your promotion request was saved but will not go live until it is paid.'],
+    order_paid: ['Order confirmed', 'Payment received. The seller has been notified.'],
+    order_cancelled: ['Payment cancelled', 'The item is still available if you want to try again.'],
+    cart_paid: ['Order confirmed', 'Payment received. The sellers have been notified.'],
+    cart_cancelled: ['Payment cancelled', 'Your items were not removed from availability.']
+  };
+  for (const key in messages) {
+    if (params.get(key)) {
+      document.getElementById('thanksTitle').textContent = messages[key][0];
+      document.getElementById('thanksText').textContent = messages[key][1];
+      showView('thanks');
+      history.replaceState(null, '', window.location.pathname);
+      return;
+    }
   }
 }
 
@@ -1566,11 +1654,11 @@ async function renderFeed() {
     const photos = item.listing_photos || [];
     let bg;
     if (photos.length > 1) {
-      const slides = photos.map(p => `<img src="${p.storage_url}">`).join('');
+      const slides = photos.map(p => `<div class="feed-photo-item"><img class="blur-bg" src="${p.storage_url}" alt=""><img class="main-img" src="${p.storage_url}" alt="${item.title}"></div>`).join('');
       const dots = photos.map((_, i) => `<span class="feed-dot${i === 0 ? ' active' : ''}"></span>`).join('');
       bg = `<div class="feed-photo-scroll" data-photo-scroll>${slides}</div><div class="feed-dots">${dots}</div><div class="feed-nav-row"><button class="feed-nav-arrow" onclick="scrollFeedPhoto(this,-1)">&larr;</button><button class="feed-nav-arrow" onclick="scrollFeedPhoto(this,1)">&rarr;</button></div>`;
     } else if (photos.length === 1) {
-      bg = `<img class="feed-bg" src="${photos[0].storage_url}">`;
+      bg = `<img class="blur-bg" src="${photos[0].storage_url}" alt="" style="position:absolute; top:-5%; left:-5%; width:110%; height:110%; object-fit:cover; filter:blur(28px) brightness(0.55);"><img class="main-img" src="${photos[0].storage_url}" alt="${item.title}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain;">`;
     } else {
       bg = `<div class="feed-fallback">📦</div>`;
     }

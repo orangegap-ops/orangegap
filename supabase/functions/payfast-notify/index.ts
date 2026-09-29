@@ -56,8 +56,9 @@ Deno.serve(async (req) => {
       }
 
       // Sanity check: amount paid should match what we expect
-      if (Math.abs(amountPaid - order.amount_paid) > 0.5) {
-        console.error('Amount mismatch on order', paymentId, amountPaid, order.amount_paid);
+      const { data: listing } = await supabase.from('listings').select('price').eq('id', order.listing_id).single();
+      if (!listing || Math.abs(amountPaid - Number(listing.price)) > 0.5) {
+        console.error('Amount mismatch on order', paymentId, amountPaid, listing && listing.price);
         return new Response('Amount mismatch', { status: 400 });
       }
 
@@ -92,7 +93,8 @@ Deno.serve(async (req) => {
         return new Response('Cart orders not found', { status: 404 });
       }
 
-      const expectedTotal = cartOrders.reduce((sum, o) => sum + Number(o.amount_paid), 0);
+      const { data: cartListings } = await supabase.from('listings').select('id, price').in('id', cartOrders.map(o => o.listing_id));
+      const expectedTotal = (cartListings || []).reduce((sum, l) => sum + Number(l.price), 0);
       if (Math.abs(amountPaid - expectedTotal) > 0.5) {
         console.error('Cart amount mismatch', paymentId, amountPaid, expectedTotal);
         return new Response('Amount mismatch', { status: 400 });

@@ -18,7 +18,7 @@
 <meta property="og:image" content="https://orangegap.vercel.app/og-image.png">
 <meta name="twitter:image" content="https://orangegap.vercel.app/og-image.png">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Organization","name":"OrangeGap","url":"https://orangegap.vercel.app/","slogan":"Bridging The Gaps","description":"Student marketplace and opportunities platform for North-West University, Potchefstroom.","areaServed":"Potchefstroom, South Africa"}
+{"@context":"https://schema.org","@type":"LocalBusiness","name":"OrangeGap","url":"https://orangegap.vercel.app/","slogan":"Bridging The Gaps","description":"Student marketplace, events and opportunities platform for North-West University, Potchefstroom.","address":{"@type":"PostalAddress","addressLocality":"Potchefstroom","addressRegion":"North West","addressCountry":"ZA"},"areaServed":{"@type":"City","name":"Potchefstroom"},"image":"https://orangegap.vercel.app/og-image.png"}
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -216,6 +216,9 @@
   .cart-row .cart-title { margin: 0; font-size: 14px; }
   .cart-row .cart-price { margin: 4px 0 0; font-size: 14px; font-weight: 700; color: var(--orange); }
 
+  .breadcrumb { display: none; max-width: 1400px; margin: 0 auto; padding: 14px 20px 0; font-size: 12px; color: var(--text-dim); }
+  .breadcrumb a { cursor: pointer; color: var(--text-dim); text-decoration: underline; }
+  .breadcrumb + .view { padding-top: 16px; }
   .faq details { border-bottom: 1px solid var(--border); padding: 14px 0; }
   .faq summary { cursor: pointer; font-weight: 600; font-size: 15px; }
   .faq details p { margin: 8px 0 0; color: var(--text-dim); font-size: 14px; max-width: 620px; }
@@ -269,6 +272,8 @@
     <button class="nav-link" data-view="profile" onclick="showView('profile')">Profile</button>
   </div>
 </div>
+
+<div id="breadcrumb" class="breadcrumb"></div>
 
 <div id="view-home" class="view active">
   <div class="hero">
@@ -391,6 +396,9 @@
     <p id="teamError" class="error-text"></p>
   </div>
   <p id="teamAddPrompt" class="muted" style="font-size:12px; margin-top:16px; cursor:pointer;" onclick="showTeamAddForm()">+ Sign in to add a team member</p>
+
+  <h2 style="margin-top:24px;">Where we operate</h2>
+  <p class="muted">OrangeGap runs on the NWU Potchefstroom campus. We don't have a shopfront, so buyers and sellers should meet in a public spot on campus. <a href="https://www.google.com/maps/search/?api=1&query=North-West+University+Potchefstroom+Campus" target="_blank" rel="noopener noreferrer">Get directions to the campus</a></p>
 
   <h2 style="margin-top:24px;">Get in touch</h2>
   <p class="muted">
@@ -604,6 +612,8 @@
   <p class="muted">To run your account, show your listings, deliver orders and keep the platform safe. We do not sell your personal information.</p>
   <h2 style="margin-top:20px;">Payments</h2>
   <p class="muted">Card and bank details are entered on PayFast's own page. OrangeGap never sees or stores them.</p>
+  <h2 style="margin-top:20px;">Analytics</h2>
+  <p class="muted">We use Google Analytics to count visits and see which pages are used. It uses cookies and does not identify you by name.</p>
   <h2 style="margin-top:20px;">Where it is stored</h2>
   <p class="muted">Your data is stored with Supabase. Passwords are hashed, and access rules stop users reading each other's private data.</p>
   <h2 style="margin-top:20px;">Your rights under POPIA</h2>
@@ -695,9 +705,55 @@ const PAGE_TITLES = {
   thanks: 'Thank you | OrangeGap'
 };
 
+const CRUMBS = {
+  about: [['about', 'About']],
+  marketplace: [['marketplace', 'Marketplace']],
+  listing: [['marketplace', 'Marketplace'], [null, 'Listing']],
+  discover: [['discover', 'Discover']],
+  promote: [['discover', 'Discover'], [null, 'Advertise']],
+  events: [['events', 'Events']],
+  addEvent: [['events', 'Events'], [null, 'Add an event']],
+  opportunities: [['opportunities', 'Opportunities']],
+  addOpportunity: [['opportunities', 'Opportunities'], [null, 'Post an opportunity']],
+  sell: [['sell', 'Sell an item']],
+  cart: [['cart', 'Cart']],
+  checkout: [['cart', 'Cart'], [null, 'Delivery details']],
+  profile: [['profile', 'Profile']],
+  auth: [['auth', 'Sign in']],
+  faq: [['faq', 'Questions']],
+  privacy: [['privacy', 'Privacy policy']]
+};
+
+function renderBreadcrumb(name) {
+  const el = document.getElementById('breadcrumb');
+  const trail = CRUMBS[name];
+  if (!trail) { el.style.display = 'none'; return; }
+  const links = trail.map(([view, label]) =>
+    view && view !== name ? `<a onclick="showView('${view}')">${label}</a>` : `<span>${label}</span>`);
+  el.innerHTML = ['<a onclick="showView(\'home\')">Home</a>'].concat(links).join(' / ');
+  el.style.display = 'block';
+}
+
+// Paste your Google Analytics ID (looks like G-XXXXXXXXXX) here to switch tracking on.
+const GA_MEASUREMENT_ID = '';
+
+function loadAnalytics() {
+  if (!GA_MEASUREMENT_ID) return;
+  const tag = document.createElement('script');
+  tag.async = true;
+  tag.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
+  document.head.appendChild(tag);
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function () { dataLayer.push(arguments); };
+  gtag('js', new Date());
+  gtag('config', GA_MEASUREMENT_ID, { send_page_view: false });
+}
+
 function showView(name) {
   document.title = PAGE_TITLES[name] || 'OrangeGap - Bridging The Gaps';
   document.body.classList.toggle('feed-open', name === 'feed');
+  renderBreadcrumb(name);
+  if (window.gtag) gtag('event', 'page_view', { page_title: document.title, page_path: '/' + name });
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.view === name));
@@ -1721,6 +1777,7 @@ function onCampusChange() {
   document.getElementById('homeCampusLabel').textContent = campus.toUpperCase();
 }
 
+loadAnalytics();
 checkPayFastReturn();
 checkSession();
 renderListings();

@@ -6,6 +6,7 @@
 <title>OrangeGap - Bridging The Gaps</title>
 <meta name="description" content="OrangeGap is a South African student marketplace and opportunities platform. Buy and sell with fellow students, discover campus events, and find jobs, internships, bursaries and vacation work - built around your campus.">
 <meta name="keywords" content="student marketplace South Africa, NWU marketplace, campus buy and sell, student jobs, student bursaries, campus events, OrangeGap">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%2314161C%22/><text x=%2232%22 y=%2244%22 font-family=%22Arial%2C sans-serif%22 font-size=%2236%22 font-weight=%22700%22 fill=%22%23FF5B1E%22 text-anchor=%22middle%22>G</text></svg>">
 <link rel="canonical" href="https://orangegap.vercel.app/">
 <meta property="og:title" content="OrangeGap - Bridging The Gaps">
 <meta property="og:description" content="The gap between what you need and who has it - closed. A trusted student marketplace and opportunities platform, built for South African campuses.">
@@ -233,6 +234,17 @@
     .mobile-cta .btn { flex: 1; }
     body.feed-open .mobile-cta { display: none; }
   }
+  .cookie-bar {
+    position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 40;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; max-width: 620px; margin: 0 auto;
+  }
+  .cookie-bar p { margin: 0; font-size: 13px; color: var(--text-dim); flex: 1; min-width: 200px; }
+  .blog-row { display: block; padding: 18px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .blog-row:hover h3 { color: var(--orange); }
+  .blog-row .blog-date { font-size: 12px; color: var(--text-dim); }
+  .blog-post p { color: var(--text-dim); font-size: 15px; line-height: 1.7; max-width: 640px; }
+  .blog-post h2 { margin-top: 26px; font-size: 18px; }
   @media (min-width: 820px) { .ads-sidebar { display: block !important; } }
   @media (max-width: 780px) {
     .hero { grid-template-columns: 1fr; }
@@ -256,7 +268,7 @@
       <option>NWU (Potchefstroom)</option>
     </select>
     <span id="authStatus" class="muted" style="font-size:13px;"></span>
-    <button onclick="showView('cart')" class="btn btn-ghost" style="position:relative; padding:8px 12px;">
+    <button onclick="showView('cart')" title="View your cart" class="btn btn-ghost" style="position:relative; padding:8px 12px;">
       🛒<span id="cartBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:var(--orange); color:#1A0D06; font-size:11px; font-weight:700; border-radius:50%; width:18px; height:18px; align-items:center; justify-content:center;">0</span>
     </button>
     <button id="authBtn" onclick="showView('auth')" class="btn btn-outline btn-sm">Sign in</button>
@@ -271,6 +283,12 @@
     <button class="nav-link" data-view="opportunities" onclick="showView('opportunities')">Opportunities</button>
     <button class="nav-link" data-view="profile" onclick="showView('profile')">Profile</button>
   </div>
+</div>
+
+<div id="cookieBar" class="cookie-bar" style="display:none;">
+  <p>We use cookies to see how OrangeGap is used, so we can improve it. See our <a onclick="showView('privacy')" style="color:var(--orange); cursor:pointer;">privacy policy</a>.</p>
+  <button onclick="setCookieConsent(false)" class="btn btn-ghost btn-sm">Decline</button>
+  <button onclick="setCookieConsent(true)" class="btn btn-primary btn-sm">Accept</button>
 </div>
 
 <div id="breadcrumb" class="breadcrumb"></div>
@@ -318,7 +336,7 @@
 </div>
 
 <div id="view-marketplace" class="view">
-  <div class="page-head"><h1>Marketplace</h1></div>
+  <div class="page-head"><h1>Marketplace</h1><p>Every listing is reviewed before it goes live. See a problem? Report it and our team will step in.</p></div>
   <div style="display:flex; gap:24px; align-items:flex-start;">
     <div style="flex:1; min-width:0;">
       <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
@@ -540,7 +558,8 @@
     <p style="display:flex; justify-content:space-between; font-size:16px; font-weight:700;">
       <span>Total</span><span class="mono" id="cartTotal" style="color:var(--orange);"></span>
     </p>
-    <button onclick="startCartCheckout()" class="btn btn-success btn-block" style="margin-top:8px;">Checkout all items</button>
+    <p class="helper-text" style="margin-top:8px;">Paid securely through PayFast - card or Instant EFT.</p>
+    <button onclick="startCartCheckout()" class="btn btn-success btn-block">Checkout all items</button>
   </div>
 </div>
 
@@ -555,7 +574,8 @@
     <input id="checkoutAddrPostal" placeholder="Postal code" class="field">
   </div>
   <input id="checkoutAddrPhone" placeholder="Contact phone number" class="field">
-  <button onclick="confirmCheckoutAddress()" class="btn btn-success btn-block" style="margin-top:8px;">Continue to payment</button>
+  <p class="helper-text">You'll pay through PayFast - card or Instant EFT, nothing stored on OrangeGap.</p>
+  <button onclick="confirmCheckoutAddress()" class="btn btn-success btn-block">Continue to payment</button>
   <p id="checkoutError" class="error-text"></p>
 </div>
 
@@ -604,6 +624,24 @@
   </div>
 </div>
 
+<div id="view-tos" class="view form-narrow">
+  <div class="page-head"><h1>Terms of Service</h1><p>Last updated September 2026.</p></div>
+  <h2 style="margin-top:20px;">Using OrangeGap</h2>
+  <p class="muted">OrangeGap is a marketplace and listings platform for students, currently built for NWU Potchefstroom. You must give accurate information when you sign up and when you list an item, event or opportunity.</p>
+  <h2 style="margin-top:20px;">Listings and pricing</h2>
+  <p class="muted">Posting a marketplace listing is free. The price shown to buyers includes a service margin that OrangeGap keeps; your Profile shows the amount you will receive for each sale. Advertising in the Sponsored section is a paid, optional feature.</p>
+  <h2 style="margin-top:20px;">Ownership and lawful goods</h2>
+  <p class="muted">You confirm that you lawfully own anything you list, and that it is legal to sell. OrangeGap may ask for evidence of ownership and can remove a listing at any time, including while a report is reviewed.</p>
+  <h2 style="margin-top:20px;">Payments</h2>
+  <p class="muted">Payments are processed by PayFast. OrangeGap does not see or store your card details. Funds are held by OrangeGap and paid out to sellers once an order is confirmed.</p>
+  <h2 style="margin-top:20px;">Meeting and safety</h2>
+  <p class="muted">Meet in a safe, public place on campus and check an item before you pay in person for anything arranged outside checkout. OrangeGap's review process supports trust but does not guarantee any listing.</p>
+  <h2 style="margin-top:20px;">Limits on our responsibility</h2>
+  <p class="muted">OrangeGap is not a party to the sale between a buyer and a seller and is not liable for the condition, legality or delivery of any item, to the extent allowed by South African law.</p>
+  <h2 style="margin-top:20px;">Changes</h2>
+  <p class="muted">We may update these terms as OrangeGap develops. Continued use of the site means you accept the current version.</p>
+</div>
+
 <div id="view-privacy" class="view form-narrow">
   <div class="page-head"><h1>Privacy policy</h1><p>Last updated September 2026.</p></div>
   <h2 style="margin-top:20px;">What we collect</h2>
@@ -625,6 +663,16 @@
   <div class="btn-row"><button onclick="showView('marketplace')" class="btn btn-primary">Back to marketplace</button><button onclick="showView('profile')" class="btn btn-outline">Go to profile</button></div>
 </div>
 
+<div id="view-blog" class="view form-narrow">
+  <div class="page-head"><h1>From OrangeGap</h1><p>Practical write-ups for students at NWU Potchefstroom.</p></div>
+  <div id="blogList"></div>
+</div>
+
+<div id="view-blogPost" class="view form-narrow blog-post">
+  <button onclick="showView('blog')" class="btn btn-ghost btn-sm" style="border:none; padding-left:0;">&larr; Back to blog</button>
+  <div id="blogPostContent"></div>
+</div>
+
 <div id="view-moderation" class="view">
   <div class="page-head"><h1>Moderation queue</h1></div>
   <div id="modQueue" class="muted">No reports yet.</div>
@@ -634,7 +682,9 @@
   <span>OrangeGap, Potchefstroom</span>
   <a onclick="showView('faq')">Questions</a>
   <a onclick="showView('privacy')">Privacy policy</a>
+  <a onclick="showView('tos')">Terms</a>
   <a onclick="showView('about')">About</a>
+  <a onclick="showView('blog')">Blog</a>
 </div>
 <div class="mobile-cta">
   <button onclick="showView('marketplace')" class="btn btn-outline">Browse</button>
@@ -701,6 +751,7 @@ const PAGE_TITLES = {
   cart: 'Your cart | OrangeGap',
   profile: 'Your profile | OrangeGap',
   faq: 'Questions and answers | OrangeGap',
+  blog: 'Blog | OrangeGap',
   privacy: 'Privacy policy | OrangeGap',
   thanks: 'Thank you | OrangeGap'
 };
@@ -721,6 +772,8 @@ const CRUMBS = {
   profile: [['profile', 'Profile']],
   auth: [['auth', 'Sign in']],
   faq: [['faq', 'Questions']],
+  blog: [['blog', 'Blog']],
+  blogPost: [['blog', 'Blog'], [null, 'Post']],
   privacy: [['privacy', 'Privacy policy']]
 };
 
@@ -736,6 +789,19 @@ function renderBreadcrumb(name) {
 
 // Paste your Google Analytics ID (looks like G-XXXXXXXXXX) here to switch tracking on.
 const GA_MEASUREMENT_ID = '';
+
+function setCookieConsent(accepted) {
+  try { localStorage.setItem('cookie_consent', accepted ? 'accepted' : 'declined'); } catch (e) {}
+  document.getElementById('cookieBar').style.display = 'none';
+  if (accepted) loadAnalytics();
+}
+
+function initCookieBar() {
+  let consent = null;
+  try { consent = localStorage.getItem('cookie_consent'); } catch (e) {}
+  if (consent === 'accepted') { loadAnalytics(); return; }
+  if (consent === null && GA_MEASUREMENT_ID) document.getElementById('cookieBar').style.display = 'flex';
+}
 
 function loadAnalytics() {
   if (!GA_MEASUREMENT_ID) return;
@@ -766,6 +832,7 @@ function showView(name) {
   if (name === 'events') renderEvents();
   if (name === 'opportunities') renderOpportunities();
   if (name === 'about') renderTeam();
+  if (name === 'blog') renderBlogList();
 }
 
 async function renderListings() {
@@ -1021,6 +1088,93 @@ async function renderModQueue() {
   el.innerHTML = (data || []).length
     ? data.map(r => `<div style="border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:8px;"><b>${esc(r.listings ? r.listings.title : r.listing_id)}</b><br><span style="font-size:12px;">${esc(r.reason)} - ${new Date(r.created_at).toLocaleString()}</span></div>`).join('')
     : 'No reports yet.';
+}
+
+
+const BLOG_POSTS = [
+  {
+    slug: 'selling-textbooks-end-of-semester',
+    title: 'Selling your textbooks at the end of semester',
+    date: '2026-09-01',
+    excerpt: 'The weeks around exams are when textbooks actually sell. A few things that make a listing move faster.',
+    body: [
+      "The end of a semester is when most textbook listings on OrangeGap actually sell, because the next intake of students is looking for exactly what you just finished using. Listing early, before the rush, usually beats listing the week everyone else does.",
+      "A photo of the actual cover and spine helps more than a stock image would, since buyers want to see the real condition, not a clean version from a bookstore. If there is a prescribed edition number, put it in the title. A textbook listed as just \"Economics textbook\" gets skipped by someone searching for a specific edition.",
+      "Price it against what a new copy costs, not what you paid. Most buyers are comparing your price to the bookstore price, so a clear discount is what gets a listing opened. If a book has heavy highlighting or missing pages, say so in the description rather than leaving it for a buyer to discover in person.",
+      "Once you list, OrangeGap reviews it before it goes live, which usually takes well under a day. After that, it's visible on the Marketplace and in the swipe feed until it sells or you take it down."
+    ]
+  },
+  {
+    slug: 'meeting-safely-on-campus',
+    title: 'Meeting a buyer or seller safely on campus',
+    date: '2026-09-08',
+    excerpt: 'A few habits that make an in-person handover safer, whether you are buying or selling.',
+    body: [
+      "Most OrangeGap trades happen in person, so the exchange itself matters as much as the listing. Meeting somewhere public and well-used on campus, rather than a residence room or an empty parking area, is the simplest thing that lowers risk for both sides.",
+      "If you're buying, check the item before you pay rather than after. It sounds obvious, but it's the step people skip when they're in a hurry. If you're selling something of real value, bringing a friend along costs nothing and changes very little about how the meeting goes.",
+      "Never pay for anything before you've actually seen it, and be cautious of anyone pushing you to move the conversation off OrangeGap and straight to a bank transfer before you've met. That pattern shows up in most scam reports we see, not just here but on any marketplace.",
+      "If something feels off, or a listing turns out to be misrepresented, the Report button on any listing goes straight to our team, not to other users. We look at every report."
+    ]
+  },
+  {
+    slug: 'faculty-opportunities-explained',
+    title: 'Finding jobs and bursaries sorted by your faculty',
+    date: '2026-09-15',
+    excerpt: 'How the Opportunities section works, and why we built it around faculty rather than one long list.',
+    body: [
+      "A generic list of jobs and bursaries is hard to search through when none of it applies to you. OrangeGap's Opportunities section is filtered by faculty from the start, covering Economic and Management Sciences, Education, Engineering, Health Sciences, Humanities, Law, Natural and Agricultural Sciences, and Theology.",
+      "Each listing is tagged as a Job, Internship, Vacation work, or Bursary, so you can narrow by both faculty and type at once. That's deliberate: a Health Sciences student looking for vacation work shouldn't have to scroll past Engineering internships to find it.",
+      "Anyone signed in can post an opportunity, whether that's a company, a student running their own small business, or someone passing along something they heard about. Every post goes through review before it's visible to others.",
+      "If you're posting one yourself, a working application link or contact detail makes the biggest difference in whether it actually leads anywhere for the person reading it."
+    ]
+  },
+  {
+    slug: 'how-moderation-works',
+    title: 'How OrangeGap decides what goes live',
+    date: '2026-09-20',
+    excerpt: 'What actually happens between clicking Submit and a listing appearing on the Marketplace.',
+    body: [
+      "Nothing posted on OrangeGap, whether it's a marketplace listing, an event, or an opportunity, appears publicly the moment you submit it. Everything goes into a review queue first, and only our team can see or act on that queue.",
+      "For marketplace listings specifically, a few automatic checks run before a human ever looks at it: whether the price is unusually far below what similar items typically sell for, and whether the description mentions moving payment off-platform before a meeting, which is a common scam pattern. Listings that trip either check are held for closer review rather than rejected outright.",
+      "Reports work the same way. When someone reports a listing, only OrangeGap's team sees it, not other users, and we ask for a real reason before a report goes through so the queue stays useful rather than filled with vague complaints.",
+      "This is manual review at the moment, not automated approval, so it can take a little time. We aim to review new listings within 24 hours."
+    ]
+  },
+  {
+    slug: 'why-we-started-at-nwu',
+    title: 'Why OrangeGap started at NWU Potchefstroom',
+    date: '2026-09-25',
+    excerpt: 'The scattered version of campus life that OrangeGap was built to replace.',
+    body: [
+      "Before OrangeGap, buying and selling on campus meant a handful of WhatsApp groups, a Facebook group for events that half the campus wasn't in, noticeboards for job postings, and no real way to tell whether a stranger selling a laptop was actually who they said they were.",
+      "None of that was connected, and none of it had any verification behind it. OrangeGap started as an attempt to put those same everyday needs, buying and selling, finding out what's happening on campus, finding work, into one place built specifically around being a student here.",
+      "It's a project built by a student, not a university service, and it started at NWU Potchefstroom because that's where the gap was most obvious day to day. The plan has always been to get the basics right at one campus before thinking about anywhere else.",
+      "If you want to know more about how it's run, the About page has the current details, and this blog is where we'll keep writing about what changes as it grows."
+    ]
+  }
+];
+
+function renderBlogList() {
+  const el = document.getElementById('blogList');
+  el.innerHTML = BLOG_POSTS.map(post => `
+    <div class="blog-row" onclick="openBlogPost('${post.slug}')">
+      <span class="blog-date">${new Date(post.date).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+      <h3 style="margin:4px 0 4px;">${esc(post.title)}</h3>
+      <p class="muted" style="font-size:14px; margin:0;">${esc(post.excerpt)}</p>
+    </div>
+  `).join('');
+}
+
+function openBlogPost(slug) {
+  const post = BLOG_POSTS.find(p => p.slug === slug);
+  if (!post) return;
+  document.title = post.title + ' | OrangeGap Blog';
+  document.getElementById('blogPostContent').innerHTML = `
+    <p class="blog-date">${new Date(post.date).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+    <h1 style="margin-top:6px;">${esc(post.title)}</h1>
+    ${post.body.map(para => `<p>${esc(para)}</p>`).join('')}
+  `;
+  showView('blogPost');
 }
 
 function checkForScamSignals(desc, price, category) {
@@ -1777,7 +1931,7 @@ function onCampusChange() {
   document.getElementById('homeCampusLabel').textContent = campus.toUpperCase();
 }
 
-loadAnalytics();
+initCookieBar();
 checkPayFastReturn();
 checkSession();
 renderListings();

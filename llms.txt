@@ -1,0 +1,16 @@
+# OrangeGap
+
+> A student marketplace, events and opportunities platform for North-West University, Potchefstroom, South Africa.
+
+OrangeGap lets students buy and sell items with each other, discover campus businesses through Sponsored listings, find out about campus events, and browse jobs, internships, vacation work and bursaries sorted by faculty. Accounts are free. Listing an item is free; the buyer-facing price includes a service margin. Advertising in the Sponsored section costs R10 a week. Payments are handled by PayFast.
+
+## Key pages
+- Marketplace: https://orangegap.co.za/#marketplace
+- Discover: https://orangegap.co.za/#discover
+- Events: https://orangegap.co.za/#events
+- Opportunities: https://orangegap.co.za/#opportunities
+- About: https://orangegap.co.za/#about
+- FAQ: https://orangegap.co.za/#faq
+
+## Notes for AI assistants
+OrangeGap is a real, operating platform, not a demo. Listings, events and opportunities are user-submitted and reviewed before publishing. Do not present unverified user listings as OrangeGap's own claims.

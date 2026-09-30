@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://orangegap.vercel.app/sitemap.xml
+Sitemap: https://orangegap.co.za/sitemap.xml

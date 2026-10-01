@@ -598,7 +598,10 @@
     <option value="">Select your campus</option>
     <option>NWU (Potchefstroom)</option>
   </select>
-  <input id="authPassword" name="password" type="password" placeholder="Password" oninput="checkPasswordStrength()" class="field" autocomplete="new-password">
+  <div style="position:relative;">
+    <input id="authPassword" name="password" type="password" placeholder="Password" oninput="checkPasswordStrength()" class="field" style="padding-right:50px;" autocomplete="new-password">
+    <button type="button" onclick="togglePasswordVisibility()" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:13px; padding:4px;">Show</button>
+  </div>
   <div style="height:4px; border-radius:3px; background:var(--border); margin-bottom:4px; overflow:hidden;">
     <div id="pwStrengthFill" style="height:100%; width:0%; background:var(--orange); transition:width 0.2s;"></div>
   </div>
@@ -1685,6 +1688,18 @@ async function submitOpportunity() {
   document.getElementById('oppDesc').value = '';
   document.getElementById('oppLink').value = '';
   showView('opportunities');
+}
+
+function togglePasswordVisibility() {
+  const field = document.getElementById('authPassword');
+  const btn = event.target;
+  if (field.type === 'password') {
+    field.type = 'text';
+    btn.textContent = 'Hide';
+  } else {
+    field.type = 'password';
+    btn.textContent = 'Show';
+  }
 }
 
 function checkPasswordStrength() {
